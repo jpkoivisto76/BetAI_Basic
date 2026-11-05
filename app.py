@@ -46,7 +46,7 @@ elif nav == "TOP 20 vihjettä":
     st.header("💡 TOP 20 Vihjettä & Arviot")
     df = load_gsheet("TOP 20 vihjettä")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, use_container_width=True, height=600)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
@@ -95,14 +95,6 @@ elif nav == "Serie A":
     df = load_gsheet("Serie A")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True)
-    else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
-
-elif nav == "Ligue 1":
-    st.header("🇫🇷 Ligue 1 - Joukkuetilastot")
-    df = load_gsheet("Ligue 1")
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        st.dataframe(df, use_category_width=True) if hasattr(st, "use_container_width") else st.dataframe(df, use_container_width=True)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
