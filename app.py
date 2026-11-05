@@ -8,13 +8,17 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 st.title("⚽ BetAI_Basic – Älykäs Vetokeskus")
 st.sidebar.header("Navigaatio")
 
+# Siistityt ja käyttäjäystävällisemmat nimet navigaatiovalikkoon
 nav = st.sidebar.selectbox("Valitse näkymä", [
     "TOP 3 Valioliiga", 
-    "TOP 20 vihjettä", 
-    "TOP5 Builderit", 
-    "TOP 20 Bet Builder Laukaukset",
-    "TOP 20 SoT Vedot",
-    "TOP 20 Rikevedot",
+    "TOP 20 Vihjeet", 
+    "TOP 5 Bet Builderit", 
+    "TOP 20 Valioliiga Laukaukset",
+    "TOP 20 Valioliiga SoT (Maalia kohti)",
+    "TOP 20 Valioliiga Rikkeet",
+    "Muut liigat: Laukaukset",
+    "Muut liigat: SoT (Maalia kohti)",
+    "Muut liigat: Rikkeet",
     "Tulevat ottelut & Tuomarit", 
     "Premier League", 
     "Bundesliga", 
@@ -37,7 +41,7 @@ def load_gsheet(sheet_name):
     except Exception as e:
         return str(e)
 
-# Näkymien renderöinti
+# Näkymien renderöinti (yhdistetty valikon nimet oikeisiin Google Sheetsin välilehtiin)
 if nav == "TOP 3 Valioliiga":
     st.header("🏆 TOP 3 Valioliiga & Vihjeet")
     df = load_gsheet("TOP 3 Valioliiga")
@@ -46,7 +50,7 @@ if nav == "TOP 3 Valioliiga":
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
-elif nav == "TOP 20 vihjettä":
+elif nav == "TOP 20 Vihjeet":
     st.header("💡 TOP 20 Vihjettä & Arviot")
     df = load_gsheet("TOP 20 vihjettä")
     if isinstance(df, pd.DataFrame) and not df.empty:
@@ -54,7 +58,7 @@ elif nav == "TOP 20 vihjettä":
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
-elif nav == "TOP5 Builderit":
+elif nav == "TOP 5 Bet Builderit":
     st.header("🛠️ TOP 5 Bet Builder -yhdistelmät")
     df = load_gsheet("TOP5 Builderit")
     if isinstance(df, pd.DataFrame) and not df.empty:
@@ -62,25 +66,49 @@ elif nav == "TOP5 Builderit":
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
-elif nav == "TOP 20 Bet Builder Laukaukset":
-    st.header("🎯 TOP 20 Bet Builder - Laukaukset (Pelaajat)")
+elif nav == "TOP 20 Valioliiga Laukaukset":
+    st.header("🎯 TOP 20 Bet Builder - Laukaukset (Valioliiga)")
     df = load_gsheet("TOP 20 Bet Builder Laukaukset")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
-elif nav == "TOP 20 SoT Vedot":
-    st.header("🎯 TOP 20 Laukaukset maalia kohti (SoT)")
+elif nav == "TOP 20 Valioliiga SoT (Maalia kohti)":
+    st.header("🎯 TOP 20 Laukaukset maalia kohti - SoT (Valioliiga)")
     df = load_gsheet("TOP 20 SoT Vedot")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
 
-elif nav == "TOP 20 Rikevedot":
-    st.header("⚠️ TOP 20 Rikevedot (Pelaajat)")
+elif nav == "TOP 20 Valioliiga Rikkeet":
+    st.header("⚠️ TOP 20 Rikevedot (Valioliiga)")
     df = load_gsheet("TOP 20 Rikevedot")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "Muut liigat: Laukaukset":
+    st.header("🎯 Muut liigat: Bet Builder - Laukaukset")
+    df = load_gsheet("Muut TOP5 Bet Builder Laukaukse")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "Muut liigat: SoT (Maalia kohti)":
+    st.header("🎯 Muut liigat: Laukaukset maalia kohti (SoT)")
+    df = load_gsheet("Muut TOP5 SoT Vedot")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "Muut liigat: Rikkeet":
+    st.header("⚠️ Muut liigat: Rikevedot")
+    df = load_gsheet("Muut TOP5 Rikevedot")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
