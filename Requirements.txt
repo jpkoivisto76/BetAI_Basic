@@ -1,0 +1,6 @@
+streamlit
+pandas
+plotly
+googlesheets4
+httr
+jsonlite
