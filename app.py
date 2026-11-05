@@ -91,7 +91,7 @@ elif nav == "TOP 20 Valioliiga Rikkeet":
 
 elif nav == "Muut liigat: Laukaukset":
     st.header("🎯 Muut liigat: Bet Builder - Laukaukset")
-    df = load_gsheet("Muut TOP5 Bet Builder Laukaukse")
+    df = load_gsheet("Muut TOP5 Bet Builder Laukaukset")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
