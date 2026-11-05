@@ -12,6 +12,9 @@ nav = st.sidebar.selectbox("Valitse näkymä", [
     "TOP 3 Valioliiga", 
     "TOP 20 vihjettä", 
     "TOP5 Builderit", 
+    "TOP 20 Bet Builder Laukaukset",
+    "TOP 20 SoT Vedot",
+    "TOP 20 Rikevedot",
     "Tulevat ottelut & Tuomarit", 
     "Premier League", 
     "Bundesliga", 
@@ -29,7 +32,6 @@ def load_gsheet(sheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     try:
         df = pd.read_csv(url)
-        # Poistetaan automaattisesti kaikki tyhjät 'Unnamed'-sarakkeet
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
         return df
     except Exception as e:
@@ -55,6 +57,30 @@ elif nav == "TOP 20 vihjettä":
 elif nav == "TOP5 Builderit":
     st.header("🛠️ TOP 5 Bet Builder -yhdistelmät")
     df = load_gsheet("TOP5 Builderit")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "TOP 20 Bet Builder Laukaukset":
+    st.header("🎯 TOP 20 Bet Builder - Laukaukset (Pelaajat)")
+    df = load_gsheet("TOP 20 Bet Builder Laukaukset")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "TOP 20 SoT Vedot":
+    st.header("🎯 TOP 20 Laukaukset maalia kohti (SoT)")
+    df = load_gsheet("TOP 20 SoT Vedot")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=600)
+    else:
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+
+elif nav == "TOP 20 Rikevedot":
+    st.header("⚠️ TOP 20 Rikevedot (Pelaajat)")
+    df = load_gsheet("TOP 20 Rikevedot")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
