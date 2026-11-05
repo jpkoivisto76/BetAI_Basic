@@ -8,7 +8,6 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 st.title("⚽ BetAI_Basic – Älykäs Vetokeskus")
 st.sidebar.header("Navigaatio")
 
-# Siistityt ja käyttäjäystävällisemmat nimet navigaatiovalikkoon
 nav = st.sidebar.selectbox("Valitse näkymä", [
     "TOP 3 Valioliiga", 
     "TOP 20 Vihjeet", 
@@ -41,7 +40,7 @@ def load_gsheet(sheet_name):
     except Exception as e:
         return str(e)
 
-# Näkymien renderöinti (yhdistetty valikon nimet oikeisiin Google Sheetsin välilehtiin)
+# Näkymien renderöinti
 if nav == "TOP 3 Valioliiga":
     st.header("🏆 TOP 3 Valioliiga & Vihjeet")
     df = load_gsheet("TOP 3 Valioliiga")
