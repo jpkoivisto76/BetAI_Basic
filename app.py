@@ -23,7 +23,6 @@ nav = st.sidebar.selectbox("Valitse näkymä", [
     "Bundesliga", 
     "La Liga", 
     "Serie A", 
-    "Ligue 1",
     "Seuranta & P&L"
 ])
 
@@ -131,7 +130,11 @@ elif nav == "Premier League":
 
 elif nav == "Bundesliiga":
     st.header("🇩🇪 Bundesliga - Joukkuetilastot")
+    # Kokeillaan ensin Bundesliga, ja jos se on tyhjä, kokeillaan Bundesliiga
     df = load_gsheet("Bundesliga")
+    if isinstance(df, str) or df.empty:
+        df = load_gsheet("Bundesliiga")
+    
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
@@ -148,14 +151,6 @@ elif nav == "La Liga":
 elif nav == "Serie A":
     st.header("🇮🇹 Serie A - Joukkuetilastot")
     df = load_gsheet("Serie A")
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        st.dataframe(df, use_container_width=True, height=600)
-    else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
-
-elif nav == "Ligue 1":
-    st.header("🇫🇷 Ligue 1 - Joukkuetilastot")
-    df = load_gsheet("Ligue 1")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
