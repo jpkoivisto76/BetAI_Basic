@@ -109,4 +109,4 @@ elif nav == "Seuranta & P&L":
     if df is not None and not df.empty:
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("Seuranta-taulukko on tällä hetk
+        st.info("Seuranta-taulukko on tällä hetkellä tyhjä.")
