@@ -2,13 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Sivuston asetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 st.title("⚽ BetAI_Basic – Älykäs Vetokeskus")
 st.sidebar.header("Navigaatio")
 
-# Navigaatiovalikko
 nav = st.sidebar.selectbox("Valitse näkymä", [
     "TOP 3 Valioliiga", 
     "TOP 20 vihjettä", 
@@ -22,13 +20,10 @@ nav = st.sidebar.selectbox("Valitse näkymä", [
     "Seuranta & P&L"
 ])
 
-# Sinun Google Sheets -taulukon ID
 SHEET_ID = "14Og1POtwncAIvcFiFkugUvms1oWu8VP0eOO5PHwB15U"
 
-# Apufunktio datan hakemiseen suoraan Google Sheetsistä välilehden nimen/gid:n perusteella
-@st.cache_data(ttl=300) # Välimuisti päivittyy automaattisesti 5 min välein
+@st.cache_data(ttl=300)
 def load_gsheet(sheet_name):
-    # Google Sheets mahdollistaa myös suoran nimen käytön export-linkissä
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
     try:
         df = pd.read_csv(url)
@@ -36,7 +31,6 @@ def load_gsheet(sheet_name):
     except Exception as e:
         return None
 
-# Näkymien renderöinti
 if nav == "TOP 3 Valioliiga":
     st.header("🏆 TOP 3 Valioliiga & Vihjeet")
     df = load_gsheet("TOP 3 Valioliiga")
@@ -115,4 +109,4 @@ elif nav == "Seuranta & P&L":
     if df is not None and not df.empty:
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("Seuranta-taulukko on tällä hetkellä tyhjä.")
+        st.info("Seuranta-taulukko on tällä hetk
