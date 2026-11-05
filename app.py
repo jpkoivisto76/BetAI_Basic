@@ -34,6 +34,10 @@ def load_gsheet(sheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     try:
         df = pd.read_csv(url)
+        # Jos palautunut data on HTML-sivu (alkaa <!DOCTYPE), linkki tai nimi on väärä
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            if "<html" in str(df.iloc[0, 0]).lower():
+                return f"Virhe: Välilehteä '{sheet_name}' ei löytynyt tai linkki ei toimi."
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
         return df
     except Exception as e:
@@ -46,7 +50,7 @@ if nav == "TOP 3 Valioliiga":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "TOP 20 Vihjeet":
     st.header("💡 TOP 20 Vihjettä & Arviot")
@@ -54,7 +58,7 @@ elif nav == "TOP 20 Vihjeet":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "TOP 5 Bet Builderit":
     st.header("🛠️ TOP 5 Bet Builder -yhdistelmät")
@@ -62,7 +66,7 @@ elif nav == "TOP 5 Bet Builderit":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "TOP 20 Valioliiga Laukaukset":
     st.header("🎯 TOP 20 Bet Builder - Laukaukset (Valioliiga)")
@@ -70,7 +74,7 @@ elif nav == "TOP 20 Valioliiga Laukaukset":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "TOP 20 Valioliiga SoT (Maalia kohti)":
     st.header("🎯 TOP 20 Laukaukset maalia kohti - SoT (Valioliiga)")
@@ -78,7 +82,7 @@ elif nav == "TOP 20 Valioliiga SoT (Maalia kohti)":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "TOP 20 Valioliiga Rikkeet":
     st.header("⚠️ TOP 20 Rikevedot (Valioliiga)")
@@ -86,7 +90,7 @@ elif nav == "TOP 20 Valioliiga Rikkeet":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Muut liigat: Laukaukset":
     st.header("🎯 Muut liigat: Bet Builder - Laukaukset")
@@ -94,7 +98,7 @@ elif nav == "Muut liigat: Laukaukset":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Muut liigat: SoT (Maalia kohti)":
     st.header("🎯 Muut liigat: Laukaukset maalia kohti (SoT)")
@@ -102,7 +106,7 @@ elif nav == "Muut liigat: SoT (Maalia kohti)":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Muut liigat: Rikkeet":
     st.header("⚠️ Muut liigat: Rikevedot")
@@ -110,7 +114,7 @@ elif nav == "Muut liigat: Rikkeet":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Tulevat ottelut & Tuomarit":
     st.header("📅 Tulevat ottelut, tuomarit ja odotusarvot")
@@ -118,7 +122,7 @@ elif nav == "Tulevat ottelut & Tuomarit":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Premier League":
     st.header("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League - Joukkuetilastot")
@@ -126,19 +130,15 @@ elif nav == "Premier League":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
-elif nav == "Bundesliiga":
+elif nav == "Bundesliga":
     st.header("🇩🇪 Bundesliga - Joukkuetilastot")
-    # Kokeillaan ensin Bundesliga, ja jos se on tyhjä, kokeillaan Bundesliiga
     df = load_gsheet("Bundesliga")
-    if isinstance(df, str) or df.empty:
-        df = load_gsheet("Bundesliiga")
-    
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "La Liga":
     st.header("🇪🇸 La Liga - Joukkuetilastot")
@@ -146,7 +146,7 @@ elif nav == "La Liga":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Serie A":
     st.header("🇮🇹 Serie A - Joukkuetilastot")
@@ -154,7 +154,7 @@ elif nav == "Serie A":
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
-        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. (Virhe: {df})")
+        st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
 elif nav == "Seuranta & P&L":
     st.header("📈 Vedonlyönnin Seuranta & P&L")
