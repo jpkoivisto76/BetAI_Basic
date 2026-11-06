@@ -12,7 +12,7 @@ st.markdown("""
         background-color: #ffffff;
         border: 1px solid #dcdcdc;
         border-radius: 8px;
-        padding: 14px;
+        padding: 12px;
         margin-bottom: 12px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
@@ -49,6 +49,13 @@ st.markdown("""
         margin-bottom: 8px !important;
         word-break: break-word !important;
         line-height: 1.35 !important;
+    }
+    
+    /* Mobiiliruuduille vielä tarkemmat säädöt */
+    @media (max-width: 768px) {
+        .card-title { font-size: 0.78rem !important; }
+        .card-info { font-size: 0.73rem !important; }
+        .card-sub { font-size: 0.68rem !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -95,7 +102,7 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Puhdas ja hallittu korttinäkymä
+# APUFUNKTIO: Puhdas, responsiivinen korttinäkymä ilman st.metriciä
 # ==========================================
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
@@ -123,7 +130,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                 clean_info_col = info_col.replace(".", " ")
                 info_str = f"<div class='card-info'><b>{clean_info_col}:</b><br>{info_val}</div>"
 
-            # Kootaan kortin yläosa tarkasti määritellyillä tyyleillä
+            # Kootaan kortin yläosa
             card_html = f"""
             <div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>
                 <div class='card-title'>#{rank_num} {main_title}</div>
@@ -134,7 +141,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             """
             st.markdown(card_html, unsafe_allow_html=True)
             
-            # Muut sarakkeet (Arvioitu Osuma ja Luottamus) siisteinä mittareina alapuolella
+            # Muut sarakkeet (esim. Arvioitu Osuma ja Luottamus) kompakteina HTML-laatikoina sarakkeissa
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
@@ -143,7 +150,16 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     val = row[col_name]
                     if pd.notna(val):
                         clean_col_name = col_name.replace(".", " ").replace("..", "-%")
-                        cols[i % 2].metric(clean_col_name, str(val))
+                        # Korvattu raskas st.metric kevyellä HTML-laatikolla
+                        cols[i % 2].markdown(
+                            f"""
+                            <div style="background:#f8f9fa; padding:6px 8px; border-radius:6px; margin-bottom:4px; border:1px solid #eee;">
+                                <div style="font-size:0.68rem; color:#666; font-weight:500;">{clean_col_name}</div>
+                                <div style="font-size:0.82rem; font-weight:700; color:#111;">{val}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
