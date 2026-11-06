@@ -16,6 +16,11 @@ st.markdown("""
         margin-bottom: 12px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+    @media (prefers-color-scheme: dark) {
+    .card-title {
+        color: white !important;
+    }
+} 
     .card-title {
         font-size: 0.85rem !important;
         font-weight: 700 !important;
