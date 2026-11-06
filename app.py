@@ -7,8 +7,9 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 st.title("⚽ BetAI_Basic – Vetokeskus")
 
-# Kaikki valikon 15 näkymää
+# Päivitetty valikko, johon lisätty "Tuplaus"
 nav_options = [
+    "Tuplaus", 
     "TOP 10 Builderit", 
     "TOP 3 Valioliiga", 
     "TOP 20 vihjettä", 
@@ -45,45 +46,42 @@ def load_gsheet(sheet_name):
     except Exception as e:
         return str(e)
 
-# ==========================================
-# APUFUNKTIO: Korttinäkymä vetovihjeille
-# ==========================================
+# Apufunktio mobiilikorteille
 def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container(border=True):
             col1, col2 = st.columns([3, 1])
-            
             with col1:
                 main_title = str(row.get(title_col, f"Kohde #{index+1}"))
                 st.markdown(f"### #{row.get('Rank', index+1)} {main_title}")
-                
-                sub_info = []
-                for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
-                    if col in row and pd.notna(row[col]) and str(row[col]) != '':
-                        sub_info.append(str(row[col]))
+                sub_info = [str(row[c]) for c in ['Pvm', 'Sarja'] if c in row and pd.notna(row[c])]
                 if sub_info:
                     st.caption(f"📅 {' | '.join(sub_info)}")
-            
             with col2:
                 if badge_col and badge_col in row:
                     st.markdown(f"### 🎯 {row[badge_col]}")
-            
             if info_col and info_col in row and pd.notna(row[info_col]):
                 st.info(f"**{info_col}:** \n\n{row[info_col]}")
             
-            other_cols = [c for c in df.columns if c not in ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]]
+            other_cols = [c for c in df.columns if c not in ['Rank', 'Pvm', 'Sarja', title_col, badge_col, info_col]]
             if other_cols:
                 cols = st.columns(min(len(other_cols), 4))
                 for i, col_name in enumerate(other_cols[:4]):
                     val = row[col_name]
                     cols[i].metric(col_name, str(val) if pd.notna(val) else "-")
 
-# ==========================================
 # NÄKYMIEN RENDERÖINTI
-# ==========================================
+if nav == "Tuplaus":
+    st.header("🎯 Päivän Tuplaus (Yhteiskerroin ~2.00)")
+    df = load_gsheet("Tuplaus")
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        render_mobile_cards(df, title_col="Tuplauksen Ottelut", badge_col="Yhteiskerroin", info_col="Valitut Kohteet")
+        with st.expander("📂 Näytä perinteisenä taulukkona"):
+            st.dataframe(df, use_container_width=True)
+    else:
+        st.warning("Ei tuplauskohteita saatavilla tällä hetkellä.")
 
-# 1. VETOVIHJEET JA BUILDERIT OLETUKSENA MOBIILIKORTEILLA
-if nav == "TOP 10 Builderit":
+elif nav == "TOP 10 Builderit":
     st.header("🛠️ TOP 10 Bet Builder -yhdistelmät")
     df = load_gsheet("TOP 10 Builderit")
     if isinstance(df, pd.DataFrame) and not df.empty:
@@ -91,7 +89,7 @@ if nav == "TOP 10 Builderit":
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
+        st.warning("Ei dataa saatavilla.")
 
 elif nav == "TOP 20 vihjettä":
     st.header("💡 TOP 20 Vihjettä & Arviot")
@@ -101,48 +99,18 @@ elif nav == "TOP 20 vihjettä":
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
+        st.warning("Ei dataa saatavilla.")
 
-elif nav == "TOP 3 Valioliiga":
-    st.header("🏆 TOP 3 Valioliiga")
-    df = load_gsheet("TOP 3 Valioliiga")
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        render_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Vihjekohde")
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
-
-# 2. PELAAJAVEDOT JA ERIKOISKOHTEET (Kortit + taulukko)
-elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet", 
-             "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"]:
-    
+else:
+    # Muut perinteiset taulukkonäkymät
     sheet_name_map = {
+        "TOP 3 Valioliiga": "TOP 3 Valioliiga",
         "TOP 20 Valioliiga Laukaukset": "TOP 20 Bet Builder Laukaukset",
         "TOP 20 Valioliiga SoT (Maalia kohti)": "TOP 20 SoT Vedot",
         "TOP 20 Valioliiga Rikkeet": "TOP 20 Rikevedot",
         "Muut liigat: Laukaukset": "Muut TOP5 Bet Builder Laukaukset",
         "Muut liigat: SoT (Maalia kohti)": "Muut TOP5 SoT Vedot",
-        "Muut liigat: Rikkeet": "Muut TOP5 Rikevedot"
-    }
-    target_sheet = sheet_name_map.get(nav, nav)
-    st.header(f"📊 {nav}")
-    df = load_gsheet(target_sheet)
-    
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        title_field = "Pelaaja" if "Pelaaja" in df.columns else df.columns[0]
-        badge_field = "Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None
-        info_field = "Suositus Veto" if "Suositus Veto" in df.columns else None
-        
-        render_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
-
-# 3. SARJATAULUKOT, TULEVAT OTTELUT JA SEURANTA PERINTEISENÄ TAULUKKONA
-else:
-    sheet_name_map = {
+        "Muut liigat: Rikkeet": "Muut TOP5 Rikevedot",
         "Tulevat ottelut & Tuomarit": "Tulevat ottelut",
         "Seuranta & P&L": "Seuranta & P&L",
         "Premier League": "Premier League",
@@ -150,11 +118,9 @@ else:
         "La Liga": "La Liga",
         "Serie A": "Serie A"
     }
-    
     target_sheet = sheet_name_map.get(nav, nav)
     st.header(f"📊 {nav}")
     df = load_gsheet(target_sheet)
-    
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=580)
     else:
