@@ -25,13 +25,10 @@ st.markdown("""
         margin-bottom: 12px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-   .card-title {
+ .card-title {
     font-size: 0.85rem !important;
     font-weight: 700 !important;
-    color: var(--text-color) !important;
-    line-height: 1.3 !important;
-    margin-bottom: 6px !important;
-    word-break: break-word !important;
+    color: #111111 !important;
 }
     .card-badge {
         display: inline-block;
