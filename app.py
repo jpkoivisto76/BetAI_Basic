@@ -1,137 +1,115 @@
-import streamlit as st
-import pandas as pd
-from urllib.parse import quote
+# -*- coding: utf-8 -*-
+# Kaytatata_Master.ipynb
 
-# Sivuston perusasetukset (leveä tila)
-st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
+# --- 1. KESKEISET KIRJASTOT JA ASETUKSET ---
+library(googlesheets4)
+library(dplyr)
+library(httr)
+library(jsonlite)
+library(googledrive)
 
-st.title("⚽ BetAI_Basic – Mobiilivetokeskus")
+# Määritetään välimuistikansio, jotta token säilyy Colab-istuntojen välillä
+options(gargle_oauth_cache = ".secrets")
 
-# 1. YLÄVALIKKO: Nopea ja helppo liikkuminen ilman sivupalkin häiriöitä
-nav_options = [
-    "TOP 10 Builderit", 
-    "TOP 3 Valioliiga", 
-    "TOP 20 vihjettä", 
-    "TOP 20 Valioliiga Laukaukset",
-    "TOP 20 Valioliiga SoT (Maalia kohti)",
-    "TOP 20 Valioliiga Rikkeet",
-    "Muut liigat: Laukaukset",
-    "Muut liigat: SoT (Maalia kohti)",
-    "Muut liigat: Rikkeet",
-    "Tulevat ottelut & Tuomarit", 
-    "Premier League", 
-    "Bundesliga", 
-    "La Liga", 
-    "Serie A", 
-    "Seuranta & P&L"
-]
+# Kirjaudutaan sisään välimuistia käyttäen
+gs4_auth(email = TRUE, cache = ".secrets")
+drive_auth(email = TRUE, cache = ".secrets")
 
-nav = st.selectbox("📌 Valitse näkymä:", nav_options, index=0)
-st.divider()
+sheet_id <- "14Og1POtwncAIvcFiFkugUvms1oWu8VP0eOO5PHwB15U"
+api_token <- "7949b939cbfb4f8488061f8cbd0c16a8"
+openweather_token <- "89adb68065570180e41bbd2f1f8f8556"
+options(timeout = 180)
 
-SHEET_ID = "14Og1POtwncAIvcFiFkugUvms1oWu8VP0eOO5PHwB15U"
+safe_download <- function(url, destfile) {
+  tryCatch({
+    download.file(url, destfile, mode = "wb", quiet = TRUE)
+    TRUE
+  }, error = function(e) { FALSE })
+}
 
-@st.cache_data(ttl=300)
-def load_gsheet(sheet_name):
-    encoded_sheet_name = quote(sheet_name)
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
-    try:
-        df = pd.read_csv(url)
-        if isinstance(df, pd.DataFrame) and not df.empty:
-            if "<html" in str(df.iloc[0, 0]).lower():
-                return f"Virhe: Välilehteä '{sheet_name}' ei löytynyt tai linkki ei toimi."
-        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-        return df
-    except Exception as e:
-        return str(e)
+cat("--- Aloitetaan Master-skriptin suoritus (Täydellinen versio kaikilla 24 välilehdellä) ---\n")
 
-# ==========================================
-# MOBIILIKORTTI- JA NÄKYMÄLOGIIKKA
-# ==========================================
+# Siivotaan vanhat turhat välilehdet ja varmistetaan että kaikki 24 vaadittua lehteä löytyy
+current_sheets <- sheet_properties(sheet_id)$name
 
-if nav == "TOP 10 Builderit":
-    st.header("🛠️ TOP 10 Bet Builder -yhdistelmät")
-    df = load_gsheet("TOP 10 Builderit")
-    
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        for index, row in df.iterrows():
-            with st.container(border=True):
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown(f"### #{row.get('Rank', index+1)} {row.get('Ottelu', 'Ottelu')}")
-                    st.caption(f"📅 {row.get('Pvm', '')}")
-                with col2:
-                    st.markdown(f"### 🎯 {row.get('Arvioitu Kerroin', '')}")
-                
-                st.info(f"**Builder Paketti:** \n\n{row.get('Builder Paketti', '')}")
-                
-                m1, m2, m3, m4, m5 = st.columns(5)
-                m1.metric("Pisteet", row.get('Builder Score', ''))
-                m2.metric("Lauk.", row.get('Laukaukset (35%)', ''))
-                m3.metric("Kulmat", row.get('Kulmat (25%)', ''))
-                m4.metric("Kortit", row.get('Kortit (20%)', ''))
-                m5.metric("Maalit", row.get('Maalit (20%)', ''))
-        
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
+sheets_to_remove <- c("TOP 20 Bet Builderit", "Muut TOP5 Bet Builderit", "TOP5 Builderit")
+for (s in sheets_to_remove) {
+  if (s %in% current_sheets) {
+    tryCatch({ sheet_delete(sheet_id, sheet = s) }, error = function(e) {})
+  }
+}
 
-elif nav == "TOP 20 vihjettä":
-    st.header("💡 TOP 20 Vihjettä & Arviot")
-    df = load_gsheet("TOP 20 vihjettä")
-    
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        for index, row in df.iterrows():
-            with st.container(border=True):
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown(f"### #{row.get('Rank', index+1)} {row.get('Ottelu', '')}")
-                    st.caption(f"📅 {row.get('Pvm', '')} | 🏆 {row.get('Sarja', '')}")
-                with col2:
-                    st.markdown(f"### 📈 {row.get('Kerroin', '')}")
-                
-                st.success(f"**Suositus Veto:** {row.get('Veto', '')}")
-                
-                b1, b2, b3 = st.columns(3)
-                b1.metric("Todennäk.", row.get('Todennäköisyys', ''))
-                b2.metric("EV %", row.get('EV %', ''))
-                b3.metric("Luottamus", row.get('Luottamus', ''))
-        
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
+required_sheets <- c(
+  "Tulevat ottelut",
+  "TOP 10 Builderit",
+  "TOP 20 vihjettä",
+  "TOP 20 Bet Builder Laukaukset",
+  "TOP 20 SoT Vedot",
+  "TOP 20 Rikevedot",
+  "Muut TOP5 Bet Builder Laukaukset",
+  "Muut TOP5 SoT Vedot",
+  "Muut TOP5 Rikevedot",
+  "TOP 3 Valioliiga",
+  "Seuranta & P&L",
+  "Tuomarit",
+  "API-Kertoimet",
+  "Premier League",
+  "Bundesliga",
+  "Serie A",
+  "La Liga",
+  "Ligue 1",
+  "Valioliiga_Pelaajat",
+  "Bundesliiga_Pelaajat",
+  "LaLiga_Pelaajat",
+  "SerieA_Pelaajat",
+  "Maalivahdit",
+  "Pelaajatilastot"
+)
 
-elif nav == "TOP 3 Valioliiga":
-    st.header("🏆 TOP 3 Valioliiga")
-    df = load_gsheet("TOP 3 Valioliiga")
-    
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        for index, row in df.iterrows():
-            with st.container(border=True):
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown(f"### #{row.get('Rank', index+1)} {row.get('Ottelu', '')}")
-                    st.caption(f"📅 {row.get('Pvm', '')}")
-                with col2:
-                    st.markdown(f"### 🎯 {row.get('Kerroin', '')}")
-                
-                st.info(f"**Kohde:** {row.get('Vihjekohde', '')}")
-                st.metric("Odotettu EV %", row.get('EV %', ''))
-        
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
+current_sheets_updated <- sheet_properties(sheet_id)$name
+for (req in required_sheets) {
+  if (!(req %in% current_sheets_updated)) {
+    sheet_add(sheet_id, sheet = req)
+  }
+}
 
-else:
-    # Yleinen mobiilioptimoitu käsittely muille laajoille tilastosivuille (esim. pelaajavedot, liigataulukot)
-    st.header(f"📊 {nav}")
-    df = load_gsheet(nav)
-    
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        st.info("💡 Vinkki: Voit selata koko taulukkoa alta tai suurentaa sen tarvittaessa koko ruudulle.")
-        st.dataframe(df, use_container_width=True, height=550)
-    else:
-        st.warning(f"Ei dataa saatavilla välilehdelle '{nav}'. ({df})")
+map_team_name <- function(name) {
+  name_map <- c(
+    "Arsenal FC" = "Arsenal", "Aston Villa FC" = "Aston Villa",
+    "AFC Bournemouth" = "Bournemouth", "Brentford FC" = "Brentford",
+    "Brighton & Hove Albion FC" = "Brighton", "Chelsea FC" = "Chelsea",
+    "Coventry City FC" = "Coventry", "Coventry City" = "Coventry", "Coventry" = "Coventry",
+    "Crystal Palace FC" = "Crystal Palace", "Everton FC" = "Everton",
+    "Fulham FC" = "Fulham", "Hull City AFC" = "Hull", "Hull City" = "Hull", "Hull" = "Hull",
+    "Ipswich Town FC" = "Ipswich", "Ipswich Town" = "Ipswich", "Ipswich" = "Ipswich",
+    "Leeds United FC" = "Leeds", "Leeds United" = "Leeds", "Leeds" = "Leeds",
+    "Liverpool FC" = "Liverpool", "Manchester City FC" = "Man City",
+    "Manchester United FC" = "Man United", "Newcastle United FC" = "Newcastle",
+    "Nottingham Forest FC" = "Nott'm Forest", "Sunderland AFC" = "Sunderland",
+    "Sunderland" = "Sunderland", "Tottenham Hotspur FC" = "Tottenham",
+    "Tottenham Hotspur" = "Tottenham", "Brighton & Hove Albion" = "Brighton",
+    "Manchester City" = "Man City", "Manchester United" = "Man United", "Newcastle United FC" = "Newcastle", "Newcastle United" = "Newcastle", "Newcastle Utd" = "Newcastle",
+    "Nottingham Forest" = "Nott'm Forest",
+    "FC Augsburg" = "Augsburg", "FC Bayern München" = "Bayern Munich",
+    "Borussia Dortmund" = "Dortmund", "Eintracht Frankfurt" = "Ein Frankfurt",
+    "1. FC Köln" = "FC Koln", "FC Köln" = "FC Koln", "Köln" = "FC Koln",
+    "SC Freiburg" = "Freiburg", "Hamburger SV" = "Hamburg",
+    "TSG 1899 Hoffenheim" = "Hoffenheim", "Bayer 04 Leverkusen" = "Leverkusen",
+    "Borussia Mönchengladbach" = "M'gladbach", "1. FSV Mainz 05" = "Mainz",
+    "SC Paderborn 07" = "Paderborn", "RB Leipzig" = "RB Leipzig",
+    "FC Schalke 04" = "Schalke 04", "VfB Stuttgart" = "Stuttgart",
+    "1. Union Berlin" = "1. Union Berlin", "Union Berlin" = "1. Union Berlin",
+    "SV Werder Bremen" = "Werder Bremen", "SV 07 Elversberg" = "Elversberg",
+    "FC St. Pauli 1910" = "St. Pauli", "St. Pauli" = "St. Pauli",
+    "VfL Bochum 1848" = "Bochum", "Bochum" = "Bochum",
+    "1. FC Heidenheim 1846" = "Heidenheim", "Heidenheim" = "Heidenheim",
+    "Holstein Kiel" = "Holstein Kiel", "Kiel" = "Holstein Kiel",
+    "VfL Wolfsburg" = "Wolfsburg", "Atalanta BC" = "Atalanta",
+    "Bologna FC 1909" = "Bologna", "Bologna 1909" = "Bologna",
+    "Cagliari Calcio" = "Cagliari", "Como 1907" = "Como", "Como" = "Como",
+    "ACF Fiorentina" = "Fiorentina", "FC Internazionale Milano" = "Inter",
+    "Juventus FC" = "Juventus", "SS Lazio" = "Lazio",
+    "AC Milan" = "Milan", "SSC Napoli" = "Napoli", "AS Roma" = "Roma",
+    "Torino FC" = "Torino", "Udinese Calcio" = "Udinese", "US Lecce" = "Lecce",
+    "Genoa CFC" = "Genoa", "AC Monza" = "Monza", "Hellas Verona FC" = "Verona",
+    "Empoli FC" = "Empoli", "Vene
