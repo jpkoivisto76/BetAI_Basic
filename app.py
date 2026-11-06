@@ -5,108 +5,46 @@ from urllib.parse import quote
 # Sivuston perusasetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
-# Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
+# Vahvistettu CSS: Pakotetaan pitkät tekstit ja otsikot pysymään kortin sisällä
 st.markdown("""
 <style>
-
-/* Kortti */
-.bet-card {
-    background-color: var(--secondary-background-color) !important;
-    border: 1px solid rgba(128,128,128,0.25) !important;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-}
-
-/* Otsikko (ottelu) */
-.card-title {
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: var(--text-color) !important;
-    line-height: 1.3 !important;
-    margin-bottom: 6px !important;
-    word-break: break-word !important;
-}
-
-/* Kerroin */
-.card-badge {
-    display: inline-block;
-    background-color: rgba(31,119,180,0.15);
-    color: #4ea3ff !important;
-    font-weight: 700;
-    font-size: 0.75rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-bottom: 6px;
-}
-
-/* Päivämäärä ym */
-.card-sub {
-    font-size: 0.75rem !important;
-    color: var(--text-color) !important;
-    opacity: 0.8;
-    margin-bottom: 6px !important;
-}
-
-/* Builder Paketti / Valitut Kohteet */
-.card-info {
-    font-size: 0.80rem !important;
-    color: var(--text-color) !important;
-    background-color: rgba(127,127,127,0.08) !important;
-    padding: 8px !important;
-    border-radius: 6px !important;
-    border-left: 3px solid #1f77b4 !important;
-    margin-bottom: 8px !important;
-    word-break: break-word !important;
-    line-height: 1.4 !important;
-}
-
-/* Mittarilaatikot */
-.metric-box {
-    background-color: rgba(127,127,127,0.08);
-    border: 1px solid rgba(127,127,127,0.20);
-    border-radius: 6px;
-    padding: 6px 8px;
-    margin-bottom: 4px;
-}
-
-.metric-label {
-    font-size: 0.68rem;
-    color: var(--text-color);
-    opacity: 0.75;
-    font-weight: 500;
-}
-
-.metric-value {
-    font-size: 0.82rem;
-    color: var(--text-color);
-    font-weight: 700;
-}
-
-/* Mobiili */
-@media (max-width: 768px) {
-
-    .card-title {
-        font-size: 0.78rem !important;
+    .mobile-card-title {
+        font-size: 0.95rem !important;
+        font-weight: 700;
+        line-height: 1.35;
+        margin-bottom: 0.3rem;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
     }
-
-    .card-info {
-        font-size: 0.72rem !important;
+    .mobile-card-sub {
+        font-size: 0.75rem !important;
+        color: #6c757d;
+        margin-bottom: 0.4rem;
+        word-break: break-word !important;
     }
-
-    .card-sub {
-        font-size: 0.66rem !important;
+    .mobile-card-info {
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
     }
-
-    .metric-label {
-        font-size: 0.62rem !important;
+    .mobile-badge {
+        display: inline-block;
+        background-color: #e8f4f8;
+        color: #1f77b4;
+        font-weight: bold;
+        font-size: 0.85rem;
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-bottom: 0.4rem;
     }
-
-    .metric-value {
-        font-size: 0.78rem !important;
+    /* Estetään streamlitin oletuselementtien ylivuodot korteissa */
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -152,68 +90,44 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Puhdas, responsiivinen korttinäkymä ilman st.metriciä
+# APUFUNKTIO: Mobiilioptimoitu korttinäkymä
 # ==========================================
-def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
+def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container(border=True):
-            raw_title = str(row.get(title_col, f"Kohde #{index+1}"))
-            main_title = raw_title.replace(".", " ")
+            main_title = str(row.get(title_col, f"Kohde #{index+1}"))
             rank_num = row.get('Rank', index+1)
             
-            # Kerroin-badge
-            badge_text = ""
+            # Badge oikeaan yläkulmaan / erillisenä elementtinä
+            badge_html = ""
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
-                badge_text = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
+                badge_html = f"<div class='mobile-badge'>🎯 Kerroin: {row[badge_col]}</div>"
             
-            # Päivämäärät ja lisätiedot
+            st.markdown(f"<div class='mobile-card-title'>#{rank_num} {main_title}</div>", unsafe_allow_html=True)
+            if badge_html:
+                st.markdown(badge_html, unsafe_allow_html=True)
+                
+            # Apitiedot
             sub_info = []
             for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
                 if col in row and pd.notna(row[col]) and str(row[col]) != '':
                     sub_info.append(str(row[col]))
-            sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
+            if sub_info:
+                st.markdown(f"<div class='mobile-card-sub'>📅 {' | '.join(sub_info)}</div>", unsafe_allow_html=True)
             
-            # Valitut kohteet / pääsisältö
-            info_str = ""
+            # Pääsisältö (esim. Valitut kohteet) täydellä rivityksellä
             if info_col and info_col in row and pd.notna(row[info_col]):
                 info_val = str(row[info_col])
-                clean_info_col = info_col.replace(".", " ")
-                info_str = f"<div class='card-info'><b>{clean_info_col}:</b><br>{info_val}</div>"
-
-            # Kootaan kortin yläosa
-            card_html = f"""
-            <div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>
-                <div class='card-title'>#{rank_num} {main_title}</div>
-                {badge_text}
-                {sub_str}
-                {info_str}
-            </div>
-            """
-            st.markdown(card_html, unsafe_allow_html=True)
+                st.markdown(f"<div class='mobile-card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
             
-            # Muut sarakkeet (esim. Arvioitu Osuma ja Luottamus) kompakteina HTML-laatikoina sarakkeissa
-           if other_cols:
-    cols = st.columns(min(len(other_cols), 2))
-
-    for i, col_name in enumerate(other_cols[:4]):
-        val = row[col_name]
-
-        if pd.notna(val):
-            clean_col_name = col_name.replace(".", " ").replace("..", "-%")
-
-            cols[i % 2].markdown(
-                f"""
-                <div class="metric-box">
-                    <div class="metric-label">
-                        {clean_col_name}
-                    </div>
-                    <div class="metric-value">
-                        {val}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            # Muut sarakkeet mittareina
+            exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
+            other_cols = [c for c in df.columns if c not in exclude_cols]
+            if other_cols:
+                cols = st.columns(min(len(other_cols), 2))
+                for i, col_name in enumerate(other_cols[:4]):
+                    val = row[col_name]
+                    cols[i % 2].metric(col_name, str(val) if pd.notna(val) else "-")
 
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
@@ -223,8 +137,7 @@ if nav == "Tuplaus":
     st.header("🎯 Päivän Tuplaus (Yhteiskerroin ~2.00)")
     df = load_gsheet("Tuplaus")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        title_column = "Tuplauksen Ottelut" if "Tuplauksen Ottelut" in df.columns else df.columns[1]
-        render_clean_mobile_cards(df, title_col=title_column, badge_col="Yhteiskerroin", info_col="Valitut Kohteet")
+        render_mobile_cards(df, title_col="Tuplauksen Ottelut", badge_col="Yhteiskerroin", info_col="Valitut Kohteet")
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
@@ -234,7 +147,7 @@ elif nav == "TOP 10 Builderit":
     st.header("🛠️ TOP 10 Bet Builder -yhdistelmät")
     df = load_gsheet("TOP 10 Builderit")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        render_clean_mobile_cards(df, title_col="Ottelu", badge_col="Arvioitu Kerroin", info_col="Builder Paketti")
+        render_mobile_cards(df, title_col="Ottelu", badge_col="Arvioitu Kerroin", info_col="Builder Paketti")
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
@@ -244,7 +157,7 @@ elif nav == "TOP 20 vihjettä":
     st.header("💡 TOP 20 Vihjettä & Arviot")
     df = load_gsheet("TOP 20 vihjettä")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        render_clean_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Veto")
+        render_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Veto")
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
@@ -254,7 +167,7 @@ elif nav == "TOP 3 Valioliiga":
     st.header("🏆 TOP 3 Valioliiga")
     df = load_gsheet("TOP 3 Valioliiga")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        render_clean_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Vihjekohde")
+        render_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Vihjekohde")
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
@@ -280,7 +193,7 @@ elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia koht
         badge_field = "Kerroin" if "Kerroin" in df.columns else ("Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None)
         info_field = "Suositus Veto" if "Suositus Veto" in df.columns else (df.columns[1] if len(df.columns) > 1 else None)
         
-        render_clean_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
+        render_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
