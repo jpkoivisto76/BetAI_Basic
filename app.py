@@ -7,15 +7,7 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 # Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
 st.markdown(
-    f"""
-    <div style="background-color: #1E1E1E; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-        <h3 style="color: #FFFFFF !important; margin: 0; font-size: 18px;">#{row['Rank']} {row['Ottelu']}</h3>
-        <p style="color: #E0E0E0 !important; margin: 5px 0 0 0;">🎯 {row['Valitut Kohteet']}</p>
-        <p style="color: #A0A0A0 !important; font-size: 14px; margin: 2px 0 0 0;">Yhteiskerroin: {row['Yhteiskerroin']} | Luottamus: {row['Luottamus']}%</p>
-    </div>
-    """, 
-)
-
+ 
 <style>
       /* Pakotetaan kaikki pääotsikot ja joukkueiden nimet valkoisiksi mobiilissa ja tummassa tilassa */
     h1, h2, h3, h4, h5, h6, .match-team-name {
