@@ -11,7 +11,7 @@ st.sidebar.header("Navigaatio")
 nav = st.sidebar.selectbox("Valitse näkymä", [
     "TOP 3 Valioliiga", 
     "TOP 20 Vihjeet", 
-    "TOP 5 Bet Builderit", 
+    "TOP 10 Builderit",  # <-- Päivitetty TOP5 -> TOP10
     "TOP 20 Valioliiga Laukaukset",
     "TOP 20 Valioliiga SoT (Maalia kohti)",
     "TOP 20 Valioliiga Rikkeet",
@@ -34,7 +34,6 @@ def load_gsheet(sheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     try:
         df = pd.read_csv(url)
-        # Jos palautunut data on HTML-sivu (alkaa <!DOCTYPE), linkki tai nimi on väärä
         if isinstance(df, pd.DataFrame) and not df.empty:
             if "<html" in str(df.iloc[0, 0]).lower():
                 return f"Virhe: Välilehteä '{sheet_name}' ei löytynyt tai linkki ei toimi."
@@ -60,13 +59,15 @@ elif nav == "TOP 20 Vihjeet":
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
-elif nav == "TOP 5 Bet Builderit":
-    st.header("🛠️ TOP 5 Bet Builder -yhdistelmät")
-    df = load_gsheet("TOP5 Builderit")
+elif nav == "TOP 10 Builderit":
+    st.header("🛠️ TOP 10 Bet Builder -yhdistelmät & Erikoiskohteet")
+    df = load_gsheet("TOP 10 Builderit")
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=600)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
+
+# (Muiden näkymien lohkot pysyvät ennallaan...)
 
 elif nav == "TOP 20 Valioliiga Laukaukset":
     st.header("🎯 TOP 20 Bet Builder - Laukaukset (Valioliiga)")
