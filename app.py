@@ -6,8 +6,12 @@ from urllib.parse import quote
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 # Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
-st.markdown(
- 
+st.markdown("""
+<style>
+    /* Pakotetaan joukkueiden nimet näkymään vaaleana/valkoisena mobiilissa ja tummassa tilassa */
+    .match-team-name, h3, h4, p, span {
+        color: #FFFFFF !important;
+    }
 <style>
       /* Pakotetaan kaikki pääotsikot ja joukkueiden nimet valkoisiksi mobiilissa ja tummassa tilassa */
     h1, h2, h3, h4, h5, h6, .match-team-name {
