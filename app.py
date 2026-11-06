@@ -9,18 +9,11 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 st.markdown("""
 <style>
     .bet-card {
-        background-color: #ffffff;
-        border: 1px solid #dcdcdc;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    @media (prefers-color-scheme: dark) {
+    background-color: var(--secondary-background-color) !important;
+}
     .card-title {
-        color: white !important;
-    }
-} 
+    color: var(--text-color) !important;
+}
     .card-badge {
         display: inline-block;
         background-color: #e8f4f8;
@@ -37,16 +30,8 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
     .card-info {
-        font-size: 0.8rem !important;
-        color: #222222 !important;
-        background-color: #f8f9fa !important;
-        padding: 8px !important;
-        border-radius: 6px !important;
-        border-left: 3px solid #1f77b4 !important;
-        margin-bottom: 8px !important;
-        word-break: break-word !important;
-        line-height: 1.35 !important;
-    }
+    color: var(--text-color) !important;
+}
     
     /* Mobiiliruuduille vielä tarkemmat säädöt */
     @media (max-width: 768px) {
