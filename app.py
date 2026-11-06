@@ -201,15 +201,19 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     if pd.notna(val):
                         clean_col_name = col_name.replace(".", " ").replace("..", "-%")
                         # Korvattu raskas st.metric kevyellä HTML-laatikolla
-                        cols[i % 2].markdown(
-                            f"""
-                            <div style="background:#f8f9fa; padding:6px 8px; border-radius:6px; margin-bottom:4px; border:1px solid #eee;">
-                                <div style="font-size:0.68rem; color:#666; font-weight:500;">{clean_col_name}</div>
-                                <div style="font-size:0.82rem; font-weight:700; color:#111;">{val}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                       cols[i % 2].markdown(
+    f"""
+    <div class="metric-box">
+        <div class="metric-label">
+            {clean_col_name}
+        </div>
+        <div class="metric-value">
+            {val}
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
