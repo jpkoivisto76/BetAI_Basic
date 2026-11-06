@@ -21,14 +21,6 @@ st.markdown("""
         color: white !important;
     }
 } 
-    .card-title {
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: #FFFFFF !important;
-    line-height: 1.3 !important;
-    margin-bottom: 6px !important;
-    word-break: break-word !important;
-}
     .card-badge {
         display: inline-block;
         background-color: #e8f4f8;
