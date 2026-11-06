@@ -106,7 +106,9 @@ def load_gsheet(sheet_name):
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container():
-            main_title = str(row.get(title_col, f"Kohde #{index+1}"))
+            # Siivotaan otsikosta mahdolliset pisteet pois (esim. Tuplauksen.Ottelut -> Tuplauksen Ottelut)
+            raw_title = str(row.get(title_col, f"Kohde #{index+1}"))
+            main_title = raw_title.replace(".", " ")
             rank_num = row.get('Rank', index+1)
             
             # Kerroin-badge
@@ -121,13 +123,14 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     sub_info.append(str(row[col]))
             sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
             
-            # Valitut kohteet / pääsisältö
+            # Valitut kohteet / pääsisältö (siivotaan myös sarakkeen nimi kauniiksi)
             info_str = ""
             if info_col and info_col in row and pd.notna(row[info_col]):
                 info_val = str(row[info_col])
-                info_str = f"<div class='card-info'><b>{info_col}:</b><br>{info_val}</div>"
+                clean_info_col = info_col.replace(".", " ")
+                info_str = f"<div class='card-info'><b>{clean_info_col}:</b><br>{info_val}</div>"
             
-            # Muut mittarit (esim. osuma-% ja luottamus) rivinä alapuolelle
+            # Muut mittarit (esim. Arvioitu Osuma ja Luottamus) ilman pisteitä ja sotkuisia tageja
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             metrics_str = ""
@@ -136,7 +139,8 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                 for col_name in other_cols[:4]:
                     val = row[col_name]
                     if pd.notna(val):
-                        metric_parts.append(f"<b>{col_name}:</b> {val}")
+                        clean_col_name = col_name.replace(".", " ").replace("..", "-%")
+                        metric_parts.append(f"<b>{clean_col_name}:</b> {val}")
                 if metric_parts:
                     metrics_str = f"<div class='card-metrics'>{' &nbsp;|&nbsp; '.join(metric_parts)}</div>"
 
