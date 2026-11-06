@@ -96,6 +96,7 @@ def load_gsheet(sheet_name):
 def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container(border=True):
+            # Haetaan otsikko turvallisesti oikeasta sarakkeesta (tuplauksessa "Tuplauksen Ottelut")
             main_title = str(row.get(title_col, f"Kohde #{index+1}"))
             rank_num = row.get('Rank', index+1)
             
@@ -121,7 +122,7 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
                 info_val = str(row[info_col])
                 st.markdown(f"<div class='mobile-card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
             
-            # Muut sarakkeet mittareina
+            # Muut sarakkeet mittareina (esim. Luottamus, Osuma-%)
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
@@ -131,14 +132,15 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     cols[i % 2].metric(col_name, str(val) if pd.notna(val) else "-")
 
 # ==========================================
-# NÄKYMIEN RENDERÖINTI
+# TUPLAUS-NÄKYMÄN KUTSU
 # ==========================================
-
 if nav == "Tuplaus":
     st.header("🎯 Päivän Tuplaus (Yhteiskerroin ~2.00)")
     df = load_gsheet("Tuplaus")
     if isinstance(df, pd.DataFrame) and not df.empty:
-        render_mobile_cards(df, title_col="Tuplauksen Ottelut", badge_col="Yhteiskerroin", info_col="Valitut Kohteet")
+        # Varmistetaan, että otsikkosarakkeen nimi vastaa tasan Google Sheetsin saraketta ("Tuplauksen Ottelut")
+        title_column = "Tuplauksen Ottelut" if "Tuplauksen Ottelut" in df.columns else df.columns[1]
+        render_mobile_cards(df, title_col=title_column, badge_col="Yhteiskerroin", info_col="Valitut Kohteet")
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
     else:
