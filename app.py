@@ -192,8 +192,6 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             st.markdown(card_html, unsafe_allow_html=True)
             
             # Muut sarakkeet (esim. Arvioitu Osuma ja Luottamus) kompakteina HTML-laatikoina sarakkeissa
-            exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
-            other_cols = [c for c in df.columns if c not in exclude_cols]
            if other_cols:
     cols = st.columns(min(len(other_cols), 2))
 
