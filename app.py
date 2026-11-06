@@ -62,12 +62,33 @@ elif nav == "TOP 20 Vihjeet":
 elif nav == "TOP 10 Builderit":
     st.header("🛠️ TOP 10 Bet Builder -yhdistelmät & Erikoiskohteet")
     df = load_gsheet("TOP 10 Builderit")
+    
     if isinstance(df, pd.DataFrame) and not df.empty:
-        st.dataframe(df, use_container_width=True, height=600)
+        # Mobiiliystävällinen korttinäkymä puhelimelle ja työpöydälle
+        for index, row in df.iterrows():
+            with st.container(border=True):
+                # Otsikkorivi: Sijoitus, Ottelu ja Kerroin
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"### #{row.get('Rank', index+1)} {row.get('Ottelu', 'Ottelu')} ({row.get('Pvm', '')})")
+                with col2:
+                    st.markdown(f"### 🎯 {row.get('Arvioitu Kerroin', '')}")
+                
+                # Builder Paketti kokonaan näkyvissä ilman katkeamista
+                st.info(f"**Builder Paketti:** \n\n{row.get('Builder Paketti', '')}")
+                
+                # Alarivi: Builder Score ja komponenttipisteet
+                m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
+                m_col1.metric("Pisteet", row.get('Builder Score', ''))
+                m_col2.metric("Laukaukset", row.get('Laukaukset (35%)', ''))
+                m_col3.metric("Kulmat", row.get('Kulmat (25%)', ''))
+                m_col4.metric("Kortit", row.get('Kortit (20%)', ''))
+                m_col5.metric("Maalit", row.get('Maalit (20%)', ''))
+        
+        with st.expander("Näytä perinteisenä taulukkona"):
+            st.dataframe(df, use_container_width=True, height=400)
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
-
-# (Muiden näkymien lohkot pysyvät ennallaan...)
 
 elif nav == "TOP 20 Valioliiga Laukaukset":
     st.header("🎯 TOP 20 Bet Builder - Laukaukset (Valioliiga)")
