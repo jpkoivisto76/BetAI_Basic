@@ -195,26 +195,27 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
-                cols = st.columns(min(len(other_cols), 2))
-             for i, col_name in enumerate(other_cols[:4]):
-    val = row[col_name]
+    cols = st.columns(min(len(other_cols), 2))
 
-    if pd.notna(val):
-        clean_col_name = col_name.replace(".", " ").replace("..", "-%")
+    for i, col_name in enumerate(other_cols[:4]):
+        val = row[col_name]
 
-        cols[i % 2].markdown(
-            f"""
-            <div class="metric-box">
-                <div class="metric-label">
-                    {clean_col_name}
+        if pd.notna(val):
+            clean_col_name = col_name.replace(".", " ").replace("..", "-%")
+
+            cols[i % 2].markdown(
+                f"""
+                <div class="metric-box">
+                    <div class="metric-label">
+                        {clean_col_name}
+                    </div>
+                    <div class="metric-value">
+                        {val}
+                    </div>
                 </div>
-                <div class="metric-value">
-                    {val}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+                """,
+                unsafe_allow_html=True
+            )
 
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
