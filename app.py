@@ -54,7 +54,7 @@ if nav == "TOP 3 Valioliiga":
     else:
         st.warning(f"Ei dataa saatavilla tai taulukko tyhjä. ({df})")
 
-elif nav == "TOP 20 Vihjeet":
+elif nav == "TOP 20 Vihjettä":
     st.header("💡 TOP 20 Vihjettä & Arviot")
     df = load_gsheet("TOP 20 vihjettä")
     if isinstance(df, pd.DataFrame) and not df.empty:
