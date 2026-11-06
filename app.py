@@ -5,38 +5,45 @@ from urllib.parse import quote
 # Sivuston perusasetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
-# Mukautettu CSS puhelimen tekstien sovittamiseen ja ylivuodon estämiseen
+# Vahvistettu CSS: Pakotetaan pitkät tekstit ja otsikot pysymään kortin sisällä
 st.markdown("""
 <style>
-    /* Estetään tekstien leikkaantuminen ja säädetään mobiilityylejä */
     .mobile-card-title {
-        font-size: 1.05rem !important;
+        font-size: 0.95rem !important;
         font-weight: 700;
-        line-height: 1.3;
-        margin-bottom: 0.2rem;
-        word-break: break-word;
-        overflow-wrap: break-word;
+        line-height: 1.35;
+        margin-bottom: 0.3rem;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
     }
     .mobile-card-sub {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
         color: #6c757d;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
+        word-break: break-word !important;
     }
     .mobile-card-info {
-        font-size: 0.9rem !important;
+        font-size: 0.85rem !important;
         line-height: 1.4;
-        word-break: break-word;
-        overflow-wrap: break-word;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
     }
     .mobile-badge {
         display: inline-block;
         background-color: #e8f4f8;
         color: #1f77b4;
         font-weight: bold;
-        font-size: 0.95rem;
-        padding: 4px 8px;
-        border-radius: 6px;
-        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-bottom: 0.4rem;
+    }
+    /* Estetään streamlitin oletuselementtien ylivuodot korteissa */
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -83,7 +90,7 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Responsiivinen mobiilikortti
+# APUFUNKTIO: Mobiilioptimoitu korttinäkymä
 # ==========================================
 def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
@@ -91,16 +98,16 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
             main_title = str(row.get(title_col, f"Kohde #{index+1}"))
             rank_num = row.get('Rank', index+1)
             
-            # Yläosio: Rank, Otsikko ja Mahdollinen Kerroin-badge
+            # Badge oikeaan yläkulmaan / erillisenä elementtinä
             badge_html = ""
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
-                badge_html = f"<span class='mobile-badge'>🎯 Kerroin: {row[badge_col]}</span>"
+                badge_html = f"<div class='mobile-badge'>🎯 Kerroin: {row[badge_col]}</div>"
             
             st.markdown(f"<div class='mobile-card-title'>#{rank_num} {main_title}</div>", unsafe_allow_html=True)
             if badge_html:
                 st.markdown(badge_html, unsafe_allow_html=True)
                 
-            # Lisätiedot (Pvm, Sarja, Joukkue jne.)
+            # Apitiedot
             sub_info = []
             for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
                 if col in row and pd.notna(row[col]) and str(row[col]) != '':
@@ -108,15 +115,16 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
             if sub_info:
                 st.markdown(f"<div class='mobile-card-sub'>📅 {' | '.join(sub_info)}</div>", unsafe_allow_html=True)
             
-            # Pääsisältö (esim. Valitut kohteet tai Veto)
+            # Pääsisältö (esim. Valitut kohteet) täydellä rivityksellä
             if info_col and info_col in row and pd.notna(row[info_col]):
-                st.info(f"**{info_col}:**\n\n{row[info_col]}")
+                info_val = str(row[info_col])
+                st.markdown(f"<div class='mobile-card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
             
-            # Tilastomittarit (näytetään 2-4 sarakkeen siistissä ruudukossa)
+            # Muut sarakkeet mittareina
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
-                cols = st.columns(min(len(other_cols), 2)) # Puhelimella max 2 saraketta rinnakkain, ettei teksti leikkaannu
+                cols = st.columns(min(len(other_cols), 2))
                 for i, col_name in enumerate(other_cols[:4]):
                     val = row[col_name]
                     cols[i % 2].metric(col_name, str(val) if pd.notna(val) else "-")
