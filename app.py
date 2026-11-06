@@ -94,7 +94,7 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Puhdas ja hallittu korttinäkymä
+# APUFUNKTIO: Yhtenäinen ja siisti korttinäkymä
 # ==========================================
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
@@ -107,7 +107,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
                 badge_html = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
             
-            # Otsikko
+            # Pakotetaan otsikko tarkasti pienennetyn luokan sisään
             st.markdown(f"<div class='card-title'>#{rank_num} {main_title}</div>", unsafe_allow_html=True)
             if badge_html:
                 st.markdown(badge_html, unsafe_allow_html=True)
