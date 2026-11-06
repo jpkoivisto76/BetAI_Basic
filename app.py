@@ -57,7 +57,7 @@ st.markdown("""
         .card-info { font-size: 0.73rem !important; }
         .card-sub { font-size: 0.68rem !important; }
     }
-st.markdown("""
+    
 <style>
     /* Pakotetaan joukkueiden nimet näkymään vaaleana/valkoisena mobiilissa ja tummassa tilassa */
     .match-team-name, h3, h4, p, span {
