@@ -7,65 +7,106 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 # Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
 st.markdown("""
-
 <style>
-      /* Pakotetaan kaikki pääotsikot ja joukkueiden nimet valkoisiksi mobiilissa ja tummassa tilassa */
-    h1, h2, h3, h4, h5, h6, .match-team-name {
-        color: #FFFFFF !important;
-    }
-    .bet-card {
-        background-color: #ffffff;
-        border: 1px solid #dcdcdc;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
- .card-title {
+
+/* Kortti */
+.bet-card {
+    background-color: var(--secondary-background-color) !important;
+    border: 1px solid rgba(128,128,128,0.25) !important;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+/* Otsikko (ottelu) */
+.card-title {
     font-size: 0.85rem !important;
     font-weight: 700 !important;
-    color: #111111 !important;
+    color: var(--text-color) !important;
+    line-height: 1.3 !important;
+    margin-bottom: 6px !important;
+    word-break: break-word !important;
 }
-    .card-badge {
-        display: inline-block;
-        background-color: #e8f4f8;
-        color: #1f77b4;
-        font-weight: bold;
-        font-size: 0.75rem;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-bottom: 6px;
+
+/* Kerroin */
+.card-badge {
+    display: inline-block;
+    background-color: rgba(31,119,180,0.15);
+    color: #4ea3ff !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+/* Päivämäärä ym */
+.card-sub {
+    font-size: 0.75rem !important;
+    color: var(--text-color) !important;
+    opacity: 0.8;
+    margin-bottom: 6px !important;
+}
+
+/* Builder Paketti / Valitut Kohteet */
+.card-info {
+    font-size: 0.80rem !important;
+    color: var(--text-color) !important;
+    background-color: rgba(127,127,127,0.08) !important;
+    padding: 8px !important;
+    border-radius: 6px !important;
+    border-left: 3px solid #1f77b4 !important;
+    margin-bottom: 8px !important;
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+}
+
+/* Mittarilaatikot */
+.metric-box {
+    background-color: rgba(127,127,127,0.08);
+    border: 1px solid rgba(127,127,127,0.20);
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+}
+
+.metric-label {
+    font-size: 0.68rem;
+    color: var(--text-color);
+    opacity: 0.75;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 0.82rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+/* Mobiili */
+@media (max-width: 768px) {
+
+    .card-title {
+        font-size: 0.78rem !important;
     }
-    .card-sub {
-        font-size: 0.75rem !important;
-        color: #6c757d !important;
-        margin-bottom: 6px !important;
-    }
+
     .card-info {
-        font-size: 0.8rem !important;
-        color: var(--text-color) !important;
-        background-color: #f8f9fa !important;
-        padding: 8px !important;
-        border-radius: 6px !important;
-        border-left: 3px solid #1f77b4 !important;
-        margin-bottom: 8px !important;
-        word-break: break-word !important;
-        line-height: 1.35 !important;
+        font-size: 0.72rem !important;
     }
-    
-    /* Mobiiliruuduille vielä tarkemmat säädöt */
-    @media (max-width: 768px) {
-        .card-title { font-size: 0.78rem !important; }
-        .card-info { font-size: 0.73rem !important; }
-        .card-sub { font-size: 0.68rem !important; }
+
+    .card-sub {
+        font-size: 0.66rem !important;
     }
-    
-<style>
-    /* Pakotetaan joukkueiden nimet näkymään vaaleana/valkoisena mobiilissa ja tummassa tilassa */
-    .match-team-name, h3, h4, p, span {
-        color: #FFFFFF !important;
+
+    .metric-label {
+        font-size: 0.62rem !important;
     }
-    
+
+    .metric-value {
+        font-size: 0.78rem !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
