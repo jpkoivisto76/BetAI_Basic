@@ -5,7 +5,7 @@ from urllib.parse import quote
 # Sivuston perusasetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
-st.title("⚽ BetAI_Basic – Mobiilivetokeskus")
+st.title("⚽ BetAI_Basic – Vetokeskus")
 
 # Kaikki valikon 15 näkymää
 nav_options = [
@@ -46,19 +46,17 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Renderöi mikä tahansa dataframe mobiilikorteina
+# APUFUNKTIO: Korttinäkymä vetovihjeille
 # ==========================================
 def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container(border=True):
             col1, col2 = st.columns([3, 1])
             
-            # Otsikko (esim. Ottelu tai Pelaaja)
             with col1:
                 main_title = str(row.get(title_col, f"Kohde #{index+1}"))
                 st.markdown(f"### #{row.get('Rank', index+1)} {main_title}")
                 
-                # Näytetään päivämäärä tai sarja, jos löytyy sarakkeista
                 sub_info = []
                 for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
                     if col in row and pd.notna(row[col]) and str(row[col]) != '':
@@ -66,16 +64,13 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
                 if sub_info:
                     st.caption(f"📅 {' | '.join(sub_info)}")
             
-            # Oikea yläkulma (esim. Kerroin tai Pisteet)
             with col2:
                 if badge_col and badge_col in row:
                     st.markdown(f"### 🎯 {row[badge_col]}")
             
-            # Keskeinen nosto (esim. Builder Paketti tai Vihjekohde)
             if info_col and info_col in row and pd.notna(row[info_col]):
                 st.info(f"**{info_col}:** \n\n{row[info_col]}")
             
-            # Muut sarakkeet pieninä mittareina tai tekstinä alarivissä
             other_cols = [c for c in df.columns if c not in ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]]
             if other_cols:
                 cols = st.columns(min(len(other_cols), 4))
@@ -87,6 +82,7 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
 # NÄKYMIEN RENDERÖINTI
 # ==========================================
 
+# 1. VETOVIHJEET JA BUILDERIT OLETUKSENA MOBIILIKORTEILLA
 if nav == "TOP 10 Builderit":
     st.header("🛠️ TOP 10 Bet Builder -yhdistelmät")
     df = load_gsheet("TOP 10 Builderit")
@@ -117,15 +113,36 @@ elif nav == "TOP 3 Valioliiga":
     else:
         st.warning("Ei dataa saatavilla tai taulukko tyhjä.")
 
-else:
-    # Kaikki muut laajemmat tilastosivut, pelaajavedot ja sarjataulukot
+# 2. PELAAJAVEDOT JA ERIKOISKOHTEET (Kortit + taulukko)
+elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet", 
+             "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"]:
+    
     sheet_name_map = {
         "TOP 20 Valioliiga Laukaukset": "TOP 20 Bet Builder Laukaukset",
         "TOP 20 Valioliiga SoT (Maalia kohti)": "TOP 20 SoT Vedot",
         "TOP 20 Valioliiga Rikkeet": "TOP 20 Rikevedot",
         "Muut liigat: Laukaukset": "Muut TOP5 Bet Builder Laukaukset",
         "Muut liigat: SoT (Maalia kohti)": "Muut TOP5 SoT Vedot",
-        "Muut liigat: Rikkeet": "Muut TOP5 Rikevedot",
+        "Muut liigat: Rikkeet": "Muut TOP5 Rikevedot"
+    }
+    target_sheet = sheet_name_map.get(nav, nav)
+    st.header(f"📊 {nav}")
+    df = load_gsheet(target_sheet)
+    
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        title_field = "Pelaaja" if "Pelaaja" in df.columns else df.columns[0]
+        badge_field = "Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None
+        info_field = "Suositus Veto" if "Suositus Veto" in df.columns else None
+        
+        render_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
+        with st.expander("📂 Näytä perinteisenä taulukkona"):
+            st.dataframe(df, use_container_width=True)
+    else:
+        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
+
+# 3. SARJATAULUKOT, TULEVAT OTTELUT JA SEURANTA PERINTEISENÄ TAULUKKONA
+else:
+    sheet_name_map = {
         "Tulevat ottelut & Tuomarit": "Tulevat ottelut",
         "Seuranta & P&L": "Seuranta & P&L",
         "Premier League": "Premier League",
@@ -139,17 +156,6 @@ else:
     df = load_gsheet(target_sheet)
     
     if isinstance(df, pd.DataFrame) and not df.empty:
-        # Tunnistetaan älykkäästi pääkenttä kortille riippuen taulukosta
-        title_field = "Ottelu" if "Ottelu" in df.columns else ("Pelaaja" if "Pelaaja" in df.columns else ("Joukkue" if "Joukkue" in df.columns else df.columns[0]))
-        badge_field = "Kerroin" if "Kerroin" in df.columns else ("Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None)
-        info_field = "Suositus Veto" if "Suositus Veto" in df.columns else None
-
-        # Näytetään mobiilikorttina, jos taulukossa on järkeviä rivejä
-        if len(df) <= 50 and title_field in df.columns:
-            render_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
-        
-        # Aina myös perinteinen taulukko heti alla tai laajennuksessa
-        with st.expander("📂 Näytä koko taulukko", expanded=(len(df) > 50)):
-            st.dataframe(df, use_container_width=True, height=550)
+        st.dataframe(df, use_container_width=True, height=580)
     else:
-        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'. ({df})")
+        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
