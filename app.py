@@ -5,14 +5,14 @@ from urllib.parse import quote
 # Sivuston perusasetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
-# Vahvistettu CSS: Pakotetaan pitkät tekstit ja otsikot pysymään kortin sisällä
+# Vahvistettu CSS: Tiukemmat fonttikoot ja täydellinen rivitys korteille
 st.markdown("""
 <style>
     .mobile-card-title {
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
         font-weight: 700;
-        line-height: 1.35;
-        margin-bottom: 0.3rem;
+        line-height: 1.3;
+        margin-bottom: 0.2rem;
         word-break: break-word !important;
         overflow-wrap: break-word !important;
         white-space: normal !important;
@@ -24,26 +24,27 @@ st.markdown("""
         word-break: break-word !important;
     }
     .mobile-card-info {
-        font-size: 0.85rem !important;
-        line-height: 1.4;
+        font-size: 0.8rem !important;
+        line-height: 1.35;
         word-break: break-word !important;
         overflow-wrap: break-word !important;
         white-space: normal !important;
+        background-color: #f8f9fa;
+        padding: 8px;
+        border-radius: 6px;
+        border-left: 3px solid #1f77b4;
+        margin-top: 0.4rem;
+        margin-bottom: 0.4rem;
     }
     .mobile-badge {
         display: inline-block;
         background-color: #e8f4f8;
         color: #1f77b4;
         font-weight: bold;
-        font-size: 0.85rem;
-        padding: 3px 6px;
+        font-size: 0.8rem;
+        padding: 2px 6px;
         border-radius: 4px;
-        margin-bottom: 0.4rem;
-    }
-    /* Estetään streamlitin oletuselementtien ylivuodot korteissa */
-    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
-        word-break: break-word;
-        overflow-wrap: break-word;
+        margin-bottom: 0.3rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -98,16 +99,16 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
             main_title = str(row.get(title_col, f"Kohde #{index+1}"))
             rank_num = row.get('Rank', index+1)
             
-            # Badge oikeaan yläkulmaan / erillisenä elementtinä
+            # Kerroin-badge
             badge_html = ""
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
-                badge_html = f"<div class='mobile-badge'>🎯 Kerroin: {row[badge_col]}</div>"
+                badge_html = f"<div class='mobile-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
             
             st.markdown(f"<div class='mobile-card-title'>#{rank_num} {main_title}</div>", unsafe_allow_html=True)
             if badge_html:
                 st.markdown(badge_html, unsafe_allow_html=True)
                 
-            # Apitiedot
+            # Päivämäärät ja sarjat
             sub_info = []
             for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
                 if col in row and pd.notna(row[col]) and str(row[col]) != '':
@@ -115,7 +116,7 @@ def render_mobile_cards(df, title_col, badge_col=None, info_col=None):
             if sub_info:
                 st.markdown(f"<div class='mobile-card-sub'>📅 {' | '.join(sub_info)}</div>", unsafe_allow_html=True)
             
-            # Pääsisältö (esim. Valitut kohteet) täydellä rivityksellä
+            # Valitut kohteet siistissä, pienifonttisessa ja rivittyvässä laatikossa
             if info_col and info_col in row and pd.notna(row[info_col]):
                 info_val = str(row[info_col])
                 st.markdown(f"<div class='mobile-card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
