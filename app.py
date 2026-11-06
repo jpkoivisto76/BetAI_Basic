@@ -7,7 +7,12 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 # Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
 st.markdown("""
+
 <style>
+      /* Pakotetaan kaikki pääotsikot ja joukkueiden nimet valkoisiksi mobiilissa ja tummassa tilassa */
+    h1, h2, h3, h4, h5, h6, .match-team-name {
+        color: #FFFFFF !important;
+    }
     .bet-card {
         background-color: #ffffff;
         border: 1px solid #dcdcdc;
