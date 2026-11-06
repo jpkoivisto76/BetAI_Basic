@@ -8,25 +8,14 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 # Tiukat ja tarkasti rajatut CSS-tyylit vain mobiilikorteille
 st.markdown("""
 <style>
-    .card-container {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
     .card-title {
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important; /* Pienennetty selvästi, jotta pitkätkin otteluparit mahtuvat */
         font-weight: 700 !important;
         color: #111111 !important;
         line-height: 1.3 !important;
         margin-bottom: 4px !important;
         word-break: break-word !important;
-    }
-    .card-sub {
-        font-size: 0.75rem !important;
-        color: #6c757d !important;
-        margin-bottom: 8px !important;
+        overflow-wrap: break-word !important;
     }
     .card-info {
         font-size: 0.8rem !important;
@@ -45,7 +34,7 @@ st.markdown("""
         background-color: #e8f4f8;
         color: #1f77b4;
         font-weight: bold;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         padding: 2px 6px;
         border-radius: 4px;
         margin-bottom: 4px;
@@ -94,7 +83,7 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Yhtenäinen ja siisti korttinäkymä
+# APUFUNKTIO: Puhdas ja hallittu korttinäkymä
 # ==========================================
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
@@ -107,8 +96,9 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
                 badge_html = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
             
-            # Pakotetaan otsikko tarkasti pienennetyn luokan sisään
-            st.markdown(f"<div class='card-title'>#{rank_num} {main_title}</div>", unsafe_allow_html=True)
+            # KÄYTETÄÄN SUORAAN HTML-DIVIÄ SEN SIJAAN ETTÄ KÄYTETTÄISIIN OLETSUKKO-OTSIKOITA (#)
+            st.markdown(f"<div class='card-title'><b>#{rank_num}</b> {main_title}</div>", unsafe_allow_html=True)
+            
             if badge_html:
                 st.markdown(badge_html, unsafe_allow_html=True)
                 
@@ -125,7 +115,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                 info_val = str(row[info_col])
                 st.markdown(f"<div class='card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
             
-            # Muut sarakkeet mittareina (esim. Arvioitu Osuma-%, Luottamus)
+            # Muut sarakkeet mittareina
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
