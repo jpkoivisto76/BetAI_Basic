@@ -14,7 +14,6 @@ st.markdown(
         <p style="color: #A0A0A0 !important; font-size: 14px; margin: 2px 0 0 0;">Yhteiskerroin: {row['Yhteiskerroin']} | Luottamus: {row['Luottamus']}%</p>
     </div>
     """, 
-    unsafe_allow_html=True
 )
 
 <style>
