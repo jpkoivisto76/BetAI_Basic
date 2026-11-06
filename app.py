@@ -17,10 +17,10 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .card-title {
-        font-size: 0.9rem !important;
+        font-size: 0.85rem !important;
         font-weight: 700 !important;
         color: #111111 !important;
-        line-height: 1.35 !important;
+        line-height: 1.3 !important;
         margin-bottom: 6px !important;
         word-break: break-word !important;
     }
@@ -29,32 +29,26 @@ st.markdown("""
         background-color: #e8f4f8;
         color: #1f77b4;
         font-weight: bold;
-        font-size: 0.8rem;
-        padding: 3px 8px;
+        font-size: 0.75rem;
+        padding: 2px 6px;
         border-radius: 4px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .card-sub {
         font-size: 0.75rem !important;
         color: #6c757d !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
     }
     .card-info {
         font-size: 0.8rem !important;
         color: #222222 !important;
         background-color: #f8f9fa !important;
-        padding: 10px !important;
+        padding: 8px !important;
         border-radius: 6px !important;
         border-left: 3px solid #1f77b4 !important;
         margin-bottom: 8px !important;
         word-break: break-word !important;
-        line-height: 1.4 !important;
-    }
-    .card-metrics {
-        font-size: 0.75rem !important;
-        color: #555555;
-        font-weight: 600;
-        margin-top: 4px;
+        line-height: 1.35 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -122,16 +116,16 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     sub_info.append(str(row[col]))
             sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
             
-            # Pääsisältö / Valitut kohteet
+            # Valitut kohteet / pääsisältö
             info_str = ""
             if info_col and info_col in row and pd.notna(row[info_col]):
                 info_val = str(row[info_col])
                 clean_info_col = info_col.replace(".", " ")
                 info_str = f"<div class='card-info'><b>{clean_info_col}:</b><br>{info_val}</div>"
 
-            # Kootaan kortin yläosa
+            # Kootaan kortin yläosa tarkasti määritellyillä tyyleillä
             card_html = f"""
-            <div class='bet-card'>
+            <div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>
                 <div class='card-title'>#{rank_num} {main_title}</div>
                 {badge_text}
                 {sub_str}
@@ -140,7 +134,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             """
             st.markdown(card_html, unsafe_allow_html=True)
             
-            # Muut sarakkeet (kuten Arvioitu Osuma ja Luottamus) näytetään siisteinä Streamlitin omina mittareina
+            # Muut sarakkeet (Arvioitu Osuma ja Luottamus) siisteinä mittareina alapuolella
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
