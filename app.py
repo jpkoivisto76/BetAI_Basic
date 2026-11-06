@@ -5,45 +5,63 @@ from urllib.parse import quote
 # Sivuston perusasetukset
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
-# Tiukat ja tarkasti rajatut CSS-tyylit vain mobiilikorteille
+# Mukautetut CSS-tyylit korteille ja mobiilioptimoinnille
 st.markdown("""
 <style>
+    .bet-card {
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 8px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
     .card-title {
-        font-size: 0.85rem !important; /* Pienennetty selvästi, jotta pitkätkin otteluparit mahtuvat */
+        font-size: 0.9rem !important;
         font-weight: 700 !important;
         color: #111111 !important;
-        line-height: 1.3 !important;
-        margin-bottom: 4px !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
-    }
-    .card-info {
-        font-size: 0.8rem !important;
-        color: #333333 !important;
-        background-color: #f8f9fa !important;
-        padding: 8px !important;
-        border-radius: 6px !important;
-        border-left: 3px solid #1f77b4 !important;
-        margin-top: 6px !important;
+        line-height: 1.35 !important;
         margin-bottom: 6px !important;
         word-break: break-word !important;
-        line-height: 1.35 !important;
     }
     .card-badge {
         display: inline-block;
         background-color: #e8f4f8;
         color: #1f77b4;
         font-weight: bold;
-        font-size: 0.75rem;
-        padding: 2px 6px;
+        font-size: 0.8rem;
+        padding: 3px 8px;
         border-radius: 4px;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
+    }
+    .card-sub {
+        font-size: 0.75rem !important;
+        color: #6c757d !important;
+        margin-bottom: 8px !important;
+    }
+    .card-info {
+        font-size: 0.8rem !important;
+        color: #222222 !important;
+        background-color: #f8f9fa !important;
+        padding: 10px !important;
+        border-radius: 6px !important;
+        border-left: 3px solid #1f77b4 !important;
+        margin-bottom: 8px !important;
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+    }
+    .card-metrics {
+        font-size: 0.75rem !important;
+        color: #555555;
+        font-weight: 600;
+        margin-top: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("⚽ BetAI_Basic – Vetokeskus")
 
+# Valikon 15 näkymää
 nav_options = [
     "Tuplaus", 
     "TOP 10 Builderit", 
@@ -87,42 +105,52 @@ def load_gsheet(sheet_name):
 # ==========================================
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
-        with st.container(border=True):
+        with st.container():
             main_title = str(row.get(title_col, f"Kohde #{index+1}"))
             rank_num = row.get('Rank', index+1)
             
             # Kerroin-badge
-            badge_html = ""
+            badge_text = ""
             if badge_col and badge_col in row and pd.notna(row[badge_col]):
-                badge_html = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
+                badge_text = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
             
-            # KÄYTETÄÄN SUORAAN HTML-DIVIÄ SEN SIJAAN ETTÄ KÄYTETTÄISIIN OLETSUKKO-OTSIKOITA (#)
-            st.markdown(f"<div class='card-title'><b>#{rank_num}</b> {main_title}</div>", unsafe_allow_html=True)
-            
-            if badge_html:
-                st.markdown(badge_html, unsafe_allow_html=True)
-                
-            # Päivämäärät / lisätiedot
+            # Päivämäärät ja lisätiedot
             sub_info = []
             for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
                 if col in row and pd.notna(row[col]) and str(row[col]) != '':
                     sub_info.append(str(row[col]))
-            if sub_info:
-                st.markdown(f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>", unsafe_allow_html=True)
+            sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
             
-            # Pääsisältö / Valitut kohteet
+            # Valitut kohteet / pääsisältö
+            info_str = ""
             if info_col and info_col in row and pd.notna(row[info_col]):
                 info_val = str(row[info_col])
-                st.markdown(f"<div class='card-info'><b>{info_col}:</b><br>{info_val}</div>", unsafe_allow_html=True)
+                info_str = f"<div class='card-info'><b>{info_col}:</b><br>{info_val}</div>"
             
-            # Muut sarakkeet mittareina
+            # Muut mittarit (esim. osuma-% ja luottamus) rivinä alapuolelle
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
+            metrics_str = ""
             if other_cols:
-                cols = st.columns(min(len(other_cols), 2))
-                for i, col_name in enumerate(other_cols[:4]):
+                metric_parts = []
+                for col_name in other_cols[:4]:
                     val = row[col_name]
-                    cols[i % 2].metric(col_name, str(val) if pd.notna(val) else "-")
+                    if pd.notna(val):
+                        metric_parts.append(f"<b>{col_name}:</b> {val}")
+                if metric_parts:
+                    metrics_str = f"<div class='card-metrics'>{' &nbsp;|&nbsp; '.join(metric_parts)}</div>"
+
+            # Kootaan kortti yhtenäiseksi HTML-blokiksi
+            card_html = f"""
+            <div class='bet-card'>
+                <div class='card-title'>#{rank_num} {main_title}</div>
+                {badge_text}
+                {sub_str}
+                {info_str}
+                {metrics_str}
+            </div>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
 
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
