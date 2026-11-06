@@ -28,7 +28,7 @@ st.markdown("""
    .card-title {
     font-size: 0.85rem !important;
     font-weight: 700 !important;
-    color: #FFFFFF !important;
+    color: var(--text-color) !important;
     line-height: 1.3 !important;
     margin-bottom: 6px !important;
     word-break: break-word !important;
@@ -50,7 +50,7 @@ st.markdown("""
     }
     .card-info {
         font-size: 0.8rem !important;
-        color: #222222 !important;
+        color: var(--text-color) !important;
         background-color: #f8f9fa !important;
         padding: 8px !important;
         border-radius: 6px !important;
