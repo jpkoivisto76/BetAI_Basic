@@ -1,17 +1,16 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from urllib.parse import quote
 
 st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 
 st.title("⚽ BetAI_Basic – Älykäs Vetokeskus")
-st.sidebar.header("Navigaatio")
 
-nav = st.sidebar.selectbox("Valitse näkymä", [
+# Navigaatiovalikko sivun yläreunassa (pudotusvalikko)
+nav_options = [
+    "TOP 10 Builderit", 
     "TOP 3 Valioliiga", 
     "TOP 20 Vihjeet", 
-    "TOP 10 Builderit",  # <-- Päivitetty TOP5 -> TOP10
     "TOP 20 Valioliiga Laukaukset",
     "TOP 20 Valioliiga SoT (Maalia kohti)",
     "TOP 20 Valioliiga Rikkeet",
@@ -24,8 +23,12 @@ nav = st.sidebar.selectbox("Valitse näkymä", [
     "La Liga", 
     "Serie A", 
     "Seuranta & P&L"
-])
+]
 
+# Valikko sijoitetaan selkeästi heti otsikon alle
+nav = st.selectbox("📌 Valitse näkymä:", nav_options, index=0)
+
+st.divider() # Erottaa valikon siististi alapuolisesta sisällöstä
 SHEET_ID = "14Og1POtwncAIvcFiFkugUvms1oWu8VP0eOO5PHwB15U"
 
 @st.cache_data(ttl=300)
