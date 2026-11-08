@@ -48,7 +48,6 @@ st.title("⚽ BetAI_Basic – Vetokeskus")
 nav_options = [
     "Tuplaus", 
     "TOP 10 Builderit", 
-    "TOP 3 Valioliiga", 
     "TOP 20 vihjettä", 
     "TOP 20 Valioliiga Laukaukset",
     "TOP 20 Valioliiga SoT (Maalia kohti)",
