@@ -178,16 +178,6 @@ elif nav == "TOP 20 vihjettä":
     else:
         st.warning("Ei dataa saatavilla.")
 
-elif nav == "TOP 3 Valioliiga":
-    st.header("🏆 TOP 3 Valioliiga")
-    df = load_gsheet("TOP 3 Valioliiga")
-    if isinstance(df, pd.DataFrame) and not df.empty:
-        render_clean_mobile_cards(df, title_col="Ottelu", badge_col="Kerroin", info_col="Vihjekohde")
-        with st.expander("📂 Näytä perinteisenä taulukkona"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("Ei dataa saatavilla.")
-
 elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet", 
              "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"]:
     
