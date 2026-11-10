@@ -9,11 +9,12 @@ st.set_page_config(page_title="BetAI_Basic", page_icon="⚽", layout="wide")
 st.markdown("""
 <style>
     .bet-card {
-    background-color: var(--secondary-background-color) !important;
-}
+        background-color: var(--secondary-background-color) !important;
+    }
     .card-title {
-    color: var(--text-color) !important;
-}
+        color: var(--text-color) !important;
+        font-weight: bold;
+    }
     .card-badge {
         display: inline-block;
         background-color: #e8f4f8;
@@ -30,8 +31,8 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
     .card-info {
-    color: var(--text-color) !important;
-}
+        color: var(--text-color) !important;
+    }
     
     /* Mobiiliruuduille vielä tarkemmat säädöt */
     @media (max-width: 768px) {
@@ -122,7 +123,7 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             """
             st.markdown(card_html, unsafe_allow_html=True)
             
-            # Muut sarakkeet (esim. Arvioitu Osuma ja Luottamus) kompakteina HTML-laatikoina sarakkeissa
+            # Muut sarakkeet kompakteina laatikot
             exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
@@ -131,7 +132,6 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                     val = row[col_name]
                     if pd.notna(val):
                         clean_col_name = col_name.replace(".", " ").replace("..", "-%")
-                        # Korvattu raskas st.metric kevyellä HTML-laatikolla
                         cols[i % 2].markdown(
                             f"""
                             <div style="background:#f8f9fa; padding:6px 8px; border-radius:6px; margin-bottom:4px; border:1px solid #eee;">
@@ -203,10 +203,58 @@ elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia koht
     else:
         st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
 
+elif nav == "Seuranta & P&L":
+    st.header("📈 Vedonlyöntiseuranta & P&L")
+    
+    # 1. Haetaan taustatietokanta (Seuranta_Data) siistiä mobiilikorttinäkymää ja tilastoja varten
+    df_raw = load_gsheet("Seuranta_Data")
+    
+    if isinstance(df_raw, pd.DataFrame) and not df_raw.empty:
+        # Puhdistetaan ja lasketaan tunnusluvut
+        tot_v = len(df_raw)
+        tot_o = sum(df_raw["Status"].astype(str).str.contains("Osuma", na=False))
+        tot_h = sum(df_raw["Status"].astype(str).str.contains("Huti", na=False))
+        tot_tuotto = round(pd.to_numeric(df_raw["Tuotto"], errors="coerce").sum(), 2)
+        tot_panos = round(pd.to_numeric(df_raw["Panos"], errors="coerce").sum(), 2)
+        roi = round((tot_tuotto / max(1, tot_panos)) * 100, 1)
+        win_rate = round((tot_o / max(1, tot_o + tot_h)) * 100, 1)
+        
+        # Näytetään pääluvut mobiiliystävällisesti laatikkoina
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""
+            <div style="background:#eef7ee; padding:10px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:8px;">
+                <div style="font-size:0.75rem; color:#2e7d32; font-weight:bold;">KOKONAISTUOTTO</div>
+                <div style="font-size:1.2rem; font-weight:bold; color:#1b5e20;">{tot_tuotto} u</div>
+                <div style="font-size:0.75rem; color:#4caf50;">ROI: {roi}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid #d0d7de; margin-bottom:8px;">
+                <div style="font-size:0.75rem; color:#1f77b4; font-weight:bold;">VEDOT & OSUMAT</div>
+                <div style="font-size:1.2rem; font-weight:bold; color:#0d47a1;">{tot_o} / {tot_v}</div>
+                <div style="font-size:0.75rem; color:#2196f3;">Osumatarkkuus: {win_rate}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.divider()
+        st.subheader("📋 Kaikki seuratut vedot")
+        
+        # Korttinäkymä veto-historiasta
+        render_clean_mobile_cards(df_raw, title_col="Ottelu", badge_col="Kerroin", info_col="Veto")
+        
+    else:
+        # Fallback: jos Seuranta_Data-välilehteä ei löydy, ladataan suoraan Seuranta & P&L
+        df_pnl = load_gsheet("Seuranta & P&L")
+        if isinstance(df_pnl, pd.DataFrame) and not df_pnl.empty:
+            st.dataframe(df_pnl, use_container_width=True, height=580)
+        else:
+            st.warning("Ei seurantadataa saatavilla.")
+
 else:
     sheet_name_map = {
         "Tulevat ottelut & Tuomarit": "Tulevat ottelut",
-        "Seuranta & P&L": "Seuranta & P&L",
         "Premier League": "Premier League",
         "Bundesliga": "Bundesliga",
         "La Liga": "La Liga",
