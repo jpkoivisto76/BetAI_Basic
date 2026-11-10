@@ -206,7 +206,7 @@ elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia koht
 elif nav == "Seuranta & P&L":
     st.header("📈 Vedonlyöntiseuranta & P&L")
     
-    # 1. Haetaan taustatietokanta (Seuranta_Data) siistiä mobiilikorttinäkymää ja tilastoja varten
+    # Haetaan taustatietokanta (Seuranta_Data)
     df_raw = load_gsheet("Seuranta_Data")
     
     if isinstance(df_raw, pd.DataFrame) and not df_raw.empty:
@@ -219,33 +219,21 @@ elif nav == "Seuranta & P&L":
         roi = round((tot_tuotto / max(1, tot_panos)) * 100, 1)
         win_rate = round((tot_o / max(1, tot_o + tot_h)) * 100, 1)
         
-        # Näytetään pääluvut mobiiliystävällisesti laatikkoina
+        # Näytetään pääluvut siisteinä mittareina puhelimelle
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown(f"""
-            <div style="background:#eef7ee; padding:10px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:8px;">
-                <div style="font-size:0.75rem; color:#2e7d32; font-weight:bold;">KOKONAISTUOTTO</div>
-                <div style="font-size:1.2rem; font-weight:bold; color:#1b5e20;">{tot_tuotto} u</div>
-                <div style="font-size:0.75rem; color:#4caf50;">ROI: {roi}%</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.metric("Kokonaisuotto", f"{tot_tuotto} u", f"ROI: {roi}%")
         with col2:
-            st.markdown(f"""
-            <div style="background:#f0f4f8; padding:10px; border-radius:8px; border:1px solid #d0d7de; margin-bottom:8px;">
-                <div style="font-size:0.75rem; color:#1f77b4; font-weight:bold;">VEDOT & OSUMAT</div>
-                <div style="font-size:1.2rem; font-weight:bold; color:#0d47a1;">{tot_o} / {tot_v}</div>
-                <div style="font-size:0.75rem; color:#2196f3;">Osumatarkkuus: {win_rate}%</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.metric("Osumat / Vedot", f"{tot_o} / {tot_v}", f"Tarkkuus: {win_rate}%")
             
         st.divider()
         st.subheader("📋 Kaikki seuratut vedot")
         
-        # Korttinäkymä veto-historiasta
-        render_clean_mobile_cards(df_raw, title_col="Ottelu", badge_col="Kerroin", info_col="Veto")
+        # Näytetään vedot puhtaana taulukkona, jotta HTML-koodi ei näy tekstinä
+        st.dataframe(df_raw, use_container_width=True, height=500)
         
     else:
-        # Fallback: jos Seuranta_Data-välilehteä ei löydy, ladataan suoraan Seuranta & P&L
+        # Fallback: jos Seuranta_Data-välilehteä ei löydy
         df_pnl = load_gsheet("Seuranta & P&L")
         if isinstance(df_pnl, pd.DataFrame) and not df_pnl.empty:
             st.dataframe(df_pnl, use_container_width=True, height=580)
