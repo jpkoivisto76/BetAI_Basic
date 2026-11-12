@@ -284,4 +284,43 @@ elif nav == "TOP 20 vihjettä":
 elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet", 
              "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"]:
     
-    sheet_name_
+    sheet_name_map = {
+        "TOP 20 Valioliiga Laukaukset": "TOP 20 Bet Builder Laukaukset",
+        "TOP 20 Valioliiga SoT (Maalia kohti)": "TOP 20 SoT Vedot",
+        "TOP 20 Valioliiga Rikkeet": "TOP 20 Rikevedot",
+        "Muut liigat: Laukaukset": "Muut TOP5 Bet Builder Laukaukset",
+        "Muut liigat: SoT (Maalia kohti)": "Muut TOP5 SoT Vedot",
+        "Muut liigat: Rikkeet": "Muut TOP5 Rikevedot"
+    }
+    target_sheet = sheet_name_map.get(nav, nav)
+    st.header(f"📊 {nav}")
+    df = load_gsheet(target_sheet)
+    
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        title_field = "Pelaaja" if "Pelaaja" in df.columns else df.columns[0]
+        badge_field = "Kerroin" if "Kerroin" in df.columns else ("Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None)
+        info_field = "Suositus Veto" if "Suositus Veto" in df.columns else (df.columns[1] if len(df.columns) > 1 else None)
+        
+        render_clean_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
+        with st.expander("📂 Näytä perinteisenä taulukkona"):
+            st.dataframe(df, use_container_width=True)
+    else:
+        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
+
+else:
+    sheet_name_map = {
+        "Tulevat ottelut & Tuomarit": "Tulevat ottelut",
+        "Premier League": "Premier League",
+        "Bundesliga": "Bundesliga",
+        "La Liga": "La Liga",
+        "Serie A": "Serie A"
+    }
+    
+    target_sheet = sheet_name_map.get(nav, nav)
+    st.header(f"📊 {nav}")
+    df = load_gsheet(target_sheet)
+    
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.dataframe(df, use_container_width=True, height=580)
+    else:
+        st.warning(f"Ei dataa saatavilla välilehdelle '{target_sheet}'.")
