@@ -83,6 +83,8 @@ def load_gsheet(sheet_name):
     except Exception as e:
         return str(e)
 
+import html
+
 # ==========================================
 # APUFUNKTIO: Puhdas, responsiivinen korttinäkymä ilman st.metriciä
 # ==========================================
