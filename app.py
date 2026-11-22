@@ -84,56 +84,63 @@ def load_gsheet(sheet_name):
         return str(e)
 
 # ==========================================
-# APUFUNKTIO: Puhdas, responsiivinen korttinäkymä
+# APUFUNKTIO: Puhdas, responsiivinen korttinäkymä ilman st.metriciä
 # ==========================================
 def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
     for index, row in df.iterrows():
         with st.container(border=True):
-            raw_title = str(row.get(title_col, f"Kohde #{index+1}"))
-            main_title = raw_title.replace(".", " ")
-            rank_num = row.get('Rank', index+1)
-            
+            actual_title_col = title_col if title_col in df.columns else df.columns[1]
+            raw_title = row.get(actual_title_col, f"Kohde #{index+1}")
+            main_title = html.escape(str(raw_title if pd.notna(raw_title) else f"Kohde #{index+1}"))
+            rank_val = row.get("Rank", index + 1)
+            rank_num = html.escape(str(int(rank_val) if pd.notna(rank_val) and str(rank_val).replace(".", "", 1).isdigit() else index + 1))
+
+            # Kerroin-badge (vain jos sarake on olemassa ja siinä on arvo)
             badge_text = ""
-            if badge_col and badge_col in row and pd.notna(row[badge_col]):
-                badge_text = f"<div class='card-badge'>🎯 Yhteiskerroin: {row[badge_col]}</div>"
-            
+            if badge_col and badge_col in df.columns and pd.notna(row.get(badge_col)) and str(row.get(badge_col)).strip() != "":
+                badge_val = html.escape(str(row[badge_col]))
+                badge_text = f"<div class='card-badge'>🎯 Yhteiskerroin: {badge_val}</div>"
+
+            # Päivämäärät ja lisätiedot
             sub_info = []
-            for col in ['Pvm', 'Sarja', 'Joukkue', 'Pelipaikka']:
-                if col in row and pd.notna(row[col]) and str(row[col]) != '':
-                    sub_info.append(str(row[col]))
+            for col in ["Pvm", "Sarja", "Joukkue", "Pelipaikka"]:
+                if col in df.columns and pd.notna(row.get(col)) and str(row.get(col)).strip() != "":
+                    sub_info.append(html.escape(str(row[col]).strip()))
             sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
-            
+
+            # Valitut kohteet / pääsisältö
             info_str = ""
-            if info_col and info_col in row and pd.notna(row[info_col]):
-                info_val = str(row[info_col])
-                clean_info_col = info_col.replace(".", " ")
+            if info_col and info_col in df.columns and pd.notna(row.get(info_col)) and str(row.get(info_col)).strip() != "":
+                info_val = html.escape(str(row[info_col]).strip())
+                clean_info_col = html.escape(info_col.replace(".", " "))
                 info_str = f"<div class='card-info'><b>{clean_info_col}:</b><br>{info_val}</div>"
 
-            card_html = f"""
-            <div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>
-                <div class='card-title'>#{rank_num} {main_title}</div>
-                {badge_text}
-                {sub_str}
-                {info_str}
-            </div>
-            """
+            # Kootaan kortin yläosa yhtenäisenä HTML-merkkijonona ilman sisennysrivinvaihtoja
+            card_html = (
+                "<div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>"
+                f"<div class='card-title'>#{rank_num} {main_title}</div>"
+                f"{badge_text}{sub_str}{info_str}"
+                "</div>"
+            )
             st.markdown(card_html, unsafe_allow_html=True)
-            
-            exclude_cols = ['Rank', 'Pvm', 'Sarja', 'Joukkue', 'Pelipaikka', title_col, badge_col, info_col]
+
+            # Muut sarakkeet kompakteina HTML-laatikoina sarakkeissa
+            exclude_cols = ["Rank", "Pvm", "Sarja", "Joukkue", "Pelipaikka", actual_title_col, badge_col, info_col]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
                 cols = st.columns(min(len(other_cols), 2))
                 for i, col_name in enumerate(other_cols[:4]):
-                    val = row[col_name]
-                    if pd.notna(val):
-                        clean_col_name = col_name.replace(".", " ").replace("..", "-%")
+                    val = row.get(col_name)
+                    if pd.notna(val) and str(val).strip() != "":
+                        clean_col_name = html.escape(col_name.replace(".", " ").replace("..", "-%"))
+                        clean_val = html.escape(str(val))
                         cols[i % 2].markdown(
-                            f"""
-                            <div style="background:#f8f9fa; padding:6px 8px; border-radius:6px; margin-bottom:4px; border:1px solid #eee;">
-                                <div style="font-size:0.68rem; color:#666; font-weight:500;">{clean_col_name}</div>
-                                <div style="font-size:0.82rem; font-weight:700; color:#111;">{val}</div>
-                            </div>
-                            """,
+                            (
+                                "<div style='background:#f8f9fa; padding:6px 8px; border-radius:6px; margin-bottom:4px; border:1px solid #eee;'>"
+                                f"<div style='font-size:0.68rem; color:#666; font-weight:500;'>{clean_col_name}</div>"
+                                f"<div style='font-size:0.82rem; font-weight:700; color:#111;'>{clean_val}</div>"
+                                "</div>"
+                            ),
                             unsafe_allow_html=True
                         )
 
