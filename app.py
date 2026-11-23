@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import html
 from urllib.parse import quote
 
 # Sivuston perusasetukset
@@ -33,7 +34,7 @@ st.markdown("""
     .card-info {
         color: var(--text-color) !important;
     }
-    
+
     /* Mobiiliruuduille vielä tarkemmat säädöt */
     @media (max-width: 768px) {
         .card-title { font-size: 0.78rem !important; }
@@ -48,19 +49,19 @@ st.title("⚽ BetAI_Basic – Vetokeskus")
 # Valikon 15 näkymää – "Seuranta & P&L" nostettu ensimmäiseksi
 nav_options = [
     "Seuranta & P&L",
-    "Tuplaus", 
-    "TOP 10 Builderit", 
-    "TOP 20 vihjettä", 
-    "TOP 20 Valioliiga Laukaukset", 
-    "TOP 20 Valioliiga SoT (Maalia kohti)", 
-    "TOP 20 Valioliiga Rikkeet", 
-    "Muut liigat: Laukaukset", 
-    "Muut liigat: SoT (Maalia kohti)", 
-    "Muut liigat: Rikkeet", 
-    "Tulevat ottelut & Tuomarit", 
-    "Premier League", 
-    "Bundesliga", 
-    "La Liga", 
+    "Tuplaus",
+    "TOP 10 Builderit",
+    "TOP 20 vihjettä",
+    "TOP 20 Valioliiga Laukaukset",
+    "TOP 20 Valioliiga SoT (Maalia kohti)",
+    "TOP 20 Valioliiga Rikkeet",
+    "Muut liigat: Laukaukset",
+    "Muut liigat: SoT (Maalia kohti)",
+    "Muut liigat: Rikkeet",
+    "Tulevat ottelut & Tuomarit",
+    "Premier League",
+    "Bundesliga",
+    "La Liga",
     "Serie A"
 ]
 
@@ -68,6 +69,7 @@ nav = st.selectbox("📌 Valitse näkymä:", nav_options, index=0)
 st.divider()
 
 SHEET_ID = "14Og1POtwncAIvcFiFkugUvms1oWu8VP0eOO5PHwB15U"
+
 
 @st.cache_data(ttl=300)
 def load_gsheet(sheet_name):
@@ -78,34 +80,46 @@ def load_gsheet(sheet_name):
         if isinstance(df, pd.DataFrame) and not df.empty:
             if "<html" in str(df.iloc[0, 0]).lower():
                 return f"Virhe: Välilehteä '{sheet_name}' ei löytynyt tai linkki ei toimi."
-        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
         return df
     except Exception as e:
         return str(e)
 
-import html
 
 # ==========================================
 # APUFUNKTIO: Puhdas, responsiivinen korttinäkymä ilman st.metriciä
 # ==========================================
-def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
+def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None, status_col="Pelattavuus"):
     for index, row in df.iterrows():
         with st.container(border=True):
             actual_title_col = title_col if title_col in df.columns else df.columns[1]
             raw_title = row.get(actual_title_col, f"Kohde #{index+1}")
             main_title = html.escape(str(raw_title if pd.notna(raw_title) else f"Kohde #{index+1}"))
             rank_val = row.get("Rank", index + 1)
-            rank_num = html.escape(str(int(rank_val) if pd.notna(rank_val) and str(rank_val).replace(".", "", 1).isdigit() else index + 1))
+            rank_num = html.escape(
+                str(int(rank_val) if pd.notna(rank_val) and str(rank_val).replace(".", "", 1).isdigit() else index + 1)
+            )
 
             # Kerroin-badge (vain jos sarake on olemassa ja siinä on arvo)
             badge_text = ""
             if badge_col and badge_col in df.columns and pd.notna(row.get(badge_col)) and str(row.get(badge_col)).strip() != "":
                 badge_val = html.escape(str(row[badge_col]))
-                badge_text = f"<div class='card-badge'>🎯 Yhteiskerroin: {badge_val}</div>"
+                badge_text = f"<span class='card-badge' style='margin-right:6px;'>🎯 Yhteiskerroin: {badge_val}</span>"
+
+            # Pelattavuus-badge (jos sarake on olemassa ja siinä on arvo)
+            status_text = ""
+            if status_col and status_col in df.columns and pd.notna(row.get(status_col)) and str(row.get(status_col)).strip() != "":
+                status_val = html.escape(str(row[status_col]).strip())
+                status_text = (
+                    "<span class='card-badge' style='background-color:#fff3cd; color:#856404;'>"
+                    f"{status_val}</span>"
+                )
+
+            badges_row = f"<div style='margin-top:4px; margin-bottom:4px;'>{badge_text}{status_text}</div>" if (badge_text or status_text) else ""
 
             # Päivämäärät ja lisätiedot
             sub_info = []
-            for col in ["Pvm", "Sarja", "Joukkue", "Pelipaikka"]:
+            for col in ["Pvm", "Tyyppi", "Sarja", "Joukkue", "Pelipaikka"]:
                 if col in df.columns and pd.notna(row.get(col)) and str(row.get(col)).strip() != "":
                     sub_info.append(html.escape(str(row[col]).strip()))
             sub_str = f"<div class='card-sub'>📅 {' | '.join(sub_info)}</div>" if sub_info else ""
@@ -121,13 +135,16 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
             card_html = (
                 "<div class='bet-card' style='border: none; padding: 0; margin: 0; background: transparent;'>"
                 f"<div class='card-title'>#{rank_num} {main_title}</div>"
-                f"{badge_text}{sub_str}{info_str}"
+                f"{badges_row}{sub_str}{info_str}"
                 "</div>"
             )
             st.markdown(card_html, unsafe_allow_html=True)
 
             # Muut sarakkeet kompakteina HTML-laatikoina sarakkeissa
-            exclude_cols = ["Rank", "Pvm", "Sarja", "Joukkue", "Pelipaikka", actual_title_col, badge_col, info_col]
+            exclude_cols = [
+                "Rank", "Pvm", "Tyyppi", "Sarja", "Joukkue", "Pelipaikka",
+                actual_title_col, badge_col, info_col, status_col
+            ]
             other_cols = [c for c in df.columns if c not in exclude_cols]
             if other_cols:
                 cols = st.columns(min(len(other_cols), 2))
@@ -146,38 +163,39 @@ def render_clean_mobile_cards(df, title_col, badge_col=None, info_col=None):
                             unsafe_allow_html=True
                         )
 
+
 # ==========================================
 # NÄKYMIEN RENDERÖINTI
 # ==========================================
 
 if nav == "Seuranta & P&L":
     st.header("📈 Vedonlyöntiseuranta & P&L")
-    
+
     df_raw = load_gsheet("Seuranta_Data")
-    
+
     if isinstance(df_raw, pd.DataFrame) and not df_raw.empty:
         # Muutetaan numeeriset sarakkeet turvallisesti luvuiksi (tuetaan myös pilkkua desimaalina)
         tuotto_series = pd.to_numeric(df_raw["Tuotto"].astype(str).str.replace(",", "."), errors="coerce").fillna(0)
         panos_series = pd.to_numeric(df_raw["Panos"].astype(str).str.replace(",", "."), errors="coerce").fillna(0)
-        
+
         status_str = df_raw["Status"].astype(str)
         osuma_mask = status_str.str.contains("Osuma", case=False, na=False)
         huti_mask = status_str.str.contains("Huti", case=False, na=False)
         ratkenneet_mask = osuma_mask | huti_mask
-        
+
         tot_v = len(df_raw)
         tot_o = int(osuma_mask.sum())
         tot_h = int(huti_mask.sum())
         tot_avoin = tot_v - (tot_o + tot_h)
-        
+
         # Lasketaan panokset ja tuotto ratkenneista vedoista (jotta avoimet vedot eivät vääristä ROI:ta)
         ratkenneet_panos = round(panos_series[ratkenneet_mask].sum(), 2) if ratkenneet_mask.any() else round(panos_series.sum(), 2)
         tot_panos = round(panos_series.sum(), 2)
         tot_tuotto = round(tuotto_series.sum(), 2)
-        
+
         roi = round((tot_tuotto / max(0.01, ratkenneet_panos)) * 100, 1) if ratkenneet_panos > 0 else 0.0
         win_rate = round((tot_o / max(1, tot_o + tot_h)) * 100, 1)
-        
+
         # Keskikertoimet (jos Kerroin-sarake löytyy)
         kerroin_col = next((c for c in df_raw.columns if "kerroin" in c.lower()), None)
         if kerroin_col:
@@ -193,7 +211,7 @@ if nav == "Seuranta & P&L":
         running_max = cum_profit.cummax()
         drawdown = cum_profit - running_max
         max_dd = round(drawdown.min(), 2) if not drawdown.empty else 0.0
-        
+
         # Rivi 1: Päätunnusluvut
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -202,7 +220,7 @@ if nav == "Seuranta & P&L":
             st.metric("Osumatarkkuus", f"{win_rate}%", f"{tot_o} osumaa / {tot_h} hutia")
         with col3:
             st.metric("Vedot yhteensä", f"{tot_v} kpl", f"Avoimet: {tot_avoin} kpl")
-            
+
         # Rivi 2: Lisätunnusluvut (kertoimet, panostus, drawdown)
         col4, col5, col6 = st.columns(3)
         with col4:
@@ -231,7 +249,7 @@ if nav == "Seuranta & P&L":
             df_calc["_Panos"] = panos_series
             df_calc["_Osuma"] = osuma_mask.astype(int)
             df_calc["_Huti"] = huti_mask.astype(int)
-            
+
             cat_summary = df_calc.groupby(cat_col, dropna=False).agg(
                 Vedot=("_Tuotto", "count"),
                 Osumat=("_Osuma", "sum"),
@@ -239,19 +257,19 @@ if nav == "Seuranta & P&L":
                 Panokset_u=("_Panos", "sum"),
                 Tuotto_u=("_Tuotto", "sum")
             ).reset_index()
-            
+
             cat_summary["Osuma %"] = (cat_summary["Osumat"] / (cat_summary["Osumat"] + cat_summary["Hudit"]).replace(0, 1) * 100).round(1)
             cat_summary["ROI %"] = (cat_summary["Tuotto_u"] / cat_summary["Panokset_u"].replace(0, 1) * 100).round(1)
             cat_summary["Tuotto_u"] = cat_summary["Tuotto_u"].round(2)
             cat_summary["Panokset_u"] = cat_summary["Panokset_u"].round(1)
-            
+
             st.dataframe(cat_summary, use_container_width=True, hide_index=True)
 
         st.divider()
         st.subheader("📋 Kaikki seuratut vedot")
         # Näytetään uusimmat vedot ylimpänä
         st.dataframe(df_raw.iloc[::-1], use_container_width=True, height=500)
-        
+
     else:
         df_pnl = load_gsheet("Seuranta & P&L")
         if isinstance(df_pnl, pd.DataFrame) and not df_pnl.empty:
@@ -290,9 +308,10 @@ elif nav == "TOP 20 vihjettä":
     else:
         st.warning("Ei dataa saatavilla.")
 
-elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet", 
-             "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"]:
-    
+elif nav in [
+    "TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia kohti)", "TOP 20 Valioliiga Rikkeet",
+    "Muut liigat: Laukaukset", "Muut liigat: SoT (Maalia kohti)", "Muut liigat: Rikkeet"
+]:
     sheet_name_map = {
         "TOP 20 Valioliiga Laukaukset": "TOP 20 Bet Builder Laukaukset",
         "TOP 20 Valioliiga SoT (Maalia kohti)": "TOP 20 SoT Vedot",
@@ -304,12 +323,12 @@ elif nav in ["TOP 20 Valioliiga Laukaukset", "TOP 20 Valioliiga SoT (Maalia koht
     target_sheet = sheet_name_map.get(nav, nav)
     st.header(f"📊 {nav}")
     df = load_gsheet(target_sheet)
-    
+
     if isinstance(df, pd.DataFrame) and not df.empty:
         title_field = "Pelaaja" if "Pelaaja" in df.columns else df.columns[0]
         badge_field = "Kerroin" if "Kerroin" in df.columns else ("Arvioitu Kerroin" if "Arvioitu Kerroin" in df.columns else None)
         info_field = "Suositus Veto" if "Suositus Veto" in df.columns else (df.columns[1] if len(df.columns) > 1 else None)
-        
+
         render_clean_mobile_cards(df, title_col=title_field, badge_col=badge_field, info_col=info_field)
         with st.expander("📂 Näytä perinteisenä taulukkona"):
             st.dataframe(df, use_container_width=True)
@@ -324,11 +343,11 @@ else:
         "La Liga": "La Liga",
         "Serie A": "Serie A"
     }
-    
+
     target_sheet = sheet_name_map.get(nav, nav)
     st.header(f"📊 {nav}")
     df = load_gsheet(target_sheet)
-    
+
     if isinstance(df, pd.DataFrame) and not df.empty:
         st.dataframe(df, use_container_width=True, height=580)
     else:
