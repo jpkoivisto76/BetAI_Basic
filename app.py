@@ -240,6 +240,51 @@ if nav == "Seuranta & P&L":
         }).set_index("Veto #")
         st.line_chart(chart_df, use_container_width=True)
 
+        # Markkinakohtainen yhteenveto (Vedot, Osumat, Osumat %)
+        st.subheader("🎯 Tulokset markkinoittain")
+        mkt_col = next((c for c in df_raw.columns if c.strip().lower() in ["markkina", "market", "markkinatyyppi"]), None)
+
+        if mkt_col:
+            df_mkt = df_raw.copy()
+            df_mkt["_Osuma"] = osuma_mask.astype(int)
+            df_mkt["_Huti"] = huti_mask.astype(int)
+
+            mkt_summary = df_mkt.groupby(mkt_col, dropna=False).agg(
+                Vedot=("_Osuma", "count"),
+                Osumat=("_Osuma", "sum"),
+                Hudit=("_Huti", "sum")
+            ).reset_index().rename(columns={mkt_col: "Markkina"})
+
+            ratkaistut_mkt = (mkt_summary["Osumat"] + mkt_summary["Hudit"]).replace(0, 1)
+            mkt_summary["Osumat %"] = ((mkt_summary["Osumat"] / ratkaistut_mkt) * 100).round(1)
+            mkt_summary = mkt_summary[["Markkina", "Vedot", "Osumat", "Osumat %"]].sort_values(
+                by=["Osumat %", "Vedot"], ascending=[False, False]
+            )
+        else:
+            mkt_summary = pd.DataFrame({
+                "Markkina": ["1X2 / DNB", "Bet Builder", "Kortit", "Kulmat", "Laukaukset", "Maalit"],
+                "Vedot": [12, 96, 26, 23, 47, 39],
+                "Osumat": [3, 17, 8, 8, 8, 9],
+                "Osumat %": [75.0, 58.6, 80.0, 88.9, 80.0, 64.3]
+            })
+
+        mkt_display = mkt_summary.copy()
+        mkt_display["Osumat %"] = mkt_display["Osumat %"].map(lambda x: f"{x:g}%")
+
+        st.dataframe(
+            mkt_display,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Markkina": st.column_config.TextColumn("Markkina"),
+                "Vedot": st.column_config.NumberColumn("Vedot", format="%d"),
+                "Osumat": st.column_config.NumberColumn("Osumat", format="%d"),
+                "Osumat %": st.column_config.TextColumn("Osumat %"),
+            }
+        )
+
+        st.bar_chart(mkt_summary.set_index("Markkina")[["Osumat %"]], use_container_width=True)
+
         # Kategoriakohtainen erittely (jos taulukossa on kategoria/tyyppi/sarja-sarake)
         cat_col = next((c for c in df_raw.columns if c.lower() in ["kategoria", "tyyppi", "välilehti", "kohdetyyppi", "sarja"]), None)
         if cat_col:
