@@ -240,36 +240,64 @@ if nav == "Seuranta & P&L":
         }).set_index("Veto #")
         st.line_chart(chart_df, use_container_width=True)
 
-        # Markkinakohtainen yhteenveto (Vedot, Osumat, Osumat %)
+        # Markkinakohtainen yhteenveto (Vedot, Osumat, Osumat %) – sis. "Tuplaus"
         st.subheader("🎯 Tulokset markkinoittain")
         mkt_col = next((c for c in df_raw.columns if c.strip().lower() in ["markkina", "market", "markkinatyyppi"]), None)
+        ott_col = next((c for c in df_raw.columns if c.strip().lower() in ["ottelu", "match"]), None)
+        veto_col = next((c for c in df_raw.columns if c.strip().lower() in ["veto", "kohde", "suositus veto"]), None)
 
-        if mkt_col:
+        def classify_market(row):
+            raw_m = str(row[mkt_col]).strip() if (mkt_col and pd.notna(row[mkt_col])) else ""
+            ott_txt = str(row[ott_col]).strip() if (ott_col and pd.notna(row[ott_col])) else ""
+            veto_txt = str(row[veto_col]).strip() if (veto_col and pd.notna(row[veto_col])) else ""
+
+            if raw_m.lower() == "tuplaus":
+                return "Tuplaus"
+            if raw_m and raw_m.lower() not in ["-", "nan", "none"]:
+                return raw_m
+            if " + " in ott_txt and ("tuplaus" in veto_txt.lower() or len(ott_txt.split(" + ")) >= 2):
+                return "Tuplaus"
+            return "Yksittäisveto"
+
+        if mkt_col or ott_col:
             df_mkt = df_raw.copy()
+            df_mkt["_Markkina_Clean"] = df_mkt.apply(classify_market, axis=1)
             df_mkt["_Osuma"] = osuma_mask.astype(int)
             df_mkt["_Huti"] = huti_mask.astype(int)
+            df_mkt["_Tuotto"] = tuotto_series
+            df_mkt["_Panos"] = panos_series
 
-            mkt_summary = df_mkt.groupby(mkt_col, dropna=False).agg(
+            mkt_summary = df_mkt.groupby("_Markkina_Clean", dropna=False).agg(
                 Vedot=("_Osuma", "count"),
                 Osumat=("_Osuma", "sum"),
-                Hudit=("_Huti", "sum")
-            ).reset_index().rename(columns={mkt_col: "Markkina"})
+                Hudit=("_Huti", "sum"),
+                Panokset=("_Panos", "sum"),
+                Tuotto=("_Tuotto", "sum")
+            ).reset_index().rename(columns={"_Markkina_Clean": "Markkina"})
 
             ratkaistut_mkt = (mkt_summary["Osumat"] + mkt_summary["Hudit"]).replace(0, 1)
             mkt_summary["Osumat %"] = ((mkt_summary["Osumat"] / ratkaistut_mkt) * 100).round(1)
-            mkt_summary = mkt_summary[["Markkina", "Vedot", "Osumat", "Osumat %"]].sort_values(
+            mkt_summary["ROI %"] = ((mkt_summary["Tuotto"] / mkt_summary["Panokset"].replace(0, 1)) * 100).round(1)
+            mkt_summary["Tuotto"] = mkt_summary["Tuotto"].round(2)
+            mkt_summary["Panokset"] = mkt_summary["Panokset"].round(1)
+
+            mkt_summary = mkt_summary[["Markkina", "Vedot", "Osumat", "Osumat %", "Tuotto", "ROI %"]].sort_values(
                 by=["Osumat %", "Vedot"], ascending=[False, False]
             )
         else:
             mkt_summary = pd.DataFrame({
-                "Markkina": ["1X2 / DNB", "Bet Builder", "Kortit", "Kulmat", "Laukaukset", "Maalit"],
-                "Vedot": [12, 96, 26, 23, 47, 39],
-                "Osumat": [3, 17, 8, 8, 8, 9],
-                "Osumat %": [75.0, 58.6, 80.0, 88.9, 80.0, 64.3]
+                "Markkina": ["1X2 / DNB", "Bet Builder", "Tuplaus", "Kortit", "Kulmat", "Laukaukset", "Maalit"],
+                "Vedot": [12, 96, 1, 26, 23, 47, 39],
+                "Osumat": [3, 17, 0, 8, 8, 8, 9],
+                "Osumat %": [75.0, 58.6, 0.0, 80.0, 88.9, 80.0, 64.3],
+                "Tuotto": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "ROI %": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             })
 
         mkt_display = mkt_summary.copy()
         mkt_display["Osumat %"] = mkt_display["Osumat %"].map(lambda x: f"{x:g}%")
+        mkt_display["ROI %"] = mkt_display["ROI %"].map(lambda x: f"{x:+.1f}%")
+        mkt_display["Tuotto"] = mkt_display["Tuotto"].map(lambda x: f"{x:+.2f} u")
 
         st.dataframe(
             mkt_display,
@@ -280,6 +308,8 @@ if nav == "Seuranta & P&L":
                 "Vedot": st.column_config.NumberColumn("Vedot", format="%d"),
                 "Osumat": st.column_config.NumberColumn("Osumat", format="%d"),
                 "Osumat %": st.column_config.TextColumn("Osumat %"),
+                "Tuotto": st.column_config.TextColumn("Tuotto"),
+                "ROI %": st.column_config.TextColumn("ROI %"),
             }
         )
 
@@ -312,7 +342,6 @@ if nav == "Seuranta & P&L":
 
         st.divider()
         st.subheader("📋 Kaikki seuratut vedot")
-        # Näytetään uusimmat vedot ylimpänä
         st.dataframe(df_raw.iloc[::-1], use_container_width=True, height=500)
 
     else:
